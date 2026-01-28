@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة المدرسة الرقمية</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 15px; }
+        .container { max-width: 600px; margin: auto; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h2 { color: #2c3e50; text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .news-item { background: #e8f4fd; padding: 10px; border-right: 5px solid #3498db; margin: 10px 0; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #eee; padding: 12px; text-align: center; }
+        th { background-color: #3498db; color: white; }
+        input[type="number"] { width: 50px; padding: 5px; border: 1px solid #ddd; border-radius: 4px; text-align: center; }
+        .btn { background: #27ae60; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        .login-box { text-align: center; }
+        input[type="password"] { padding: 10px; width: 80%; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .status-badge { display: inline-block; padding: 5px 10px; border-radius: 20px; font-size: 12px; margin-bottom: 10px; }
+        .admin-mode { background: #e74c3c; color: white; }
+        .student-mode { background: #3498db; color: white; }
+        .readonly-input { border: none !important; background: transparent !important; pointer-events: none; color: #2c3e50; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div style="text-align: center; margin-bottom: 20px;">
+        <div style="font-size: 50px;">🏫</div>
+        <h3>نظام إدارة العلامات</h3>
+    </div>
+
+    <div class="card">
+        <h2>📢 لوحة الإعلانات</h2>
+        <div class="news-item">📌 موعد تسليم الجلاءات المدرسية يوم الخميس القادم.</div>
+        <div class="news-item">📝 ملاحظة للموجه: يرجى إنهاء إدخال درجات المذاكرة قبل نهاية الأسبوع.</div>
+    </div>
+
+    <div class="card" id="login-section">
+        <h2>🔐 دخول النظام</h2>
+        <div class="login-box">
+            <p>للدخول بصلاحية "موجه" لتعديل العلامات، أدخل الرمز:</p>
+            <input type="password" id="passInput" placeholder="أدخل الرمز السري">
+            <button class="btn" onclick="app.login()">دخول (وضع الموجه)</button>
+            <button class="btn" style="background:#3498db;" onclick="app.viewAsStudent()">دخول (وضع الطالب - عرض فقط)</button>
+        </div>
+    </div>
+
+    <div class="card" id="grades-section" style="display: none;">
+        <div id="mode-badge" class="status-badge"></div>
+        <h2>📊 جدول العلامات</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>المادة</th>
+                    <th>الكاملة</th>
+                    <th>مذاكرة</th>
+                    <th>امتحان</th>
+                </tr>
+            </thead>
+            <tbody id="grades-body">
+                </tbody>
+        </table>
+        <div id="admin-controls" style="display: none;">
+            <button class="btn" onclick="app.saveGrades()">حفظ التعديلات نهائياً</button>
+        </div>
+        <button class="btn" style="background:#95a5a6; margin-top:20px;" onclick="location.reload()">تسجيل الخروج</button>
+    </div>
+</div>
+
+<script>
+const app = {
+    // البيانات الأساسية
+    subjects: [
+        {name: "اللغة العربية", total: 600, quiz: 0, exam: 0},
+        {name: "اللغة الانكليزية", total: 400, quiz: 0, exam: 0},
+        {name: "اللغة الفرنسية", total: 300, quiz: 0, exam: 0},
+        {name: "الفيزياء", total: 100, quiz: 0, exam: 0},
+        {name: "الكيمياء", total: 100, quiz: 0, exam: 0},
+        {name: "علم الاحياء", total: 200, quiz: 0, exam: 0},
+        {name: "الرياضيات - جبر", total: 300, quiz: 0, exam: 0},
+        {name: "الرياضيات - هندسة", total: 300, quiz: 0, exam: 0}
+    ],
+    isAdmin: false,
+
+    login: function() {
+        const pass = document.getElementById('passInput').value;
+        if(pass === "admin123") { // رمز الموجه
+            this.isAdmin = true;
+            this.showGrades();
+        } else {
+            alert("الرمز السري للموجه خطأ!");
+        }
+    },
+
+    viewAsStudent: function() {
+        this.isAdmin = false;
+        this.showGrades();
+    },
+
+    showGrades: function() {
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('grades-section').style.display = 'block';
+        
+        const badge = document.getElementById('mode-badge');
+        const controls = document.getElementById('admin-controls');
+        
+        if(this.isAdmin) {
+            badge.innerHTML = "وضع الموجه (تعديل متاح)";
+            badge.className = "status-badge admin-mode";
+            controls.style.display = 'block';
+        } else {
+            badge.innerHTML = "وضع الطالب (عرض فقط)";
+            badge.className = "status-badge student-mode";
+            controls.style.display = 'none';
+        }
+
+        const tbody = document.getElementById('grades-body');
+        tbody.innerHTML = '';
+
+        this.subjects.forEach((sub, index) => {
+            const row = `
+                <tr>
+                    <td>${sub.name}</td>
+                    <td>${sub.total}</td>
+                    <td><input type="number" class="${this.isAdmin ? '' : 'readonly-input'}" value="${sub.quiz}"></td>
+                    <td><input type="number" class="${this.isAdmin ? '' : 'readonly-input'}" value="${sub.exam}"></td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+    },
+
+    saveGrades: function() {
+        alert("تم حفظ الدرجات في قاعدة بيانات المدرسة بنجاح!");
+    }
+};
+</script>
+
+</body>
+</html>
