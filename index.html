@@ -178,6 +178,84 @@
         document.getElementById('tab-profile').style.display = t === 'profile' ? 'block' : 'none';
         document.getElementById('tab-admin').style.display = t === 'admin' ? 'block' : 'none';
     }
+<script>
+    // استخدام رابط سحابي مباشر ومفتوح تماماً للتجارب
+    const firebaseConfig = { 
+        databaseURL: "https://ips-khaldon-default-rtdb.firebaseio.com/" 
+    };
+    
+    // تأمين تشغيل المكتبة
+    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+    const db = firebase.database();
+
+    function handleRegister() {
+        const btn = document.getElementById('save-btn');
+        const id = document.getElementById('reg-id').value;
+        
+        // حساب الصف تلقائياً بناءً على الرقم
+        let gradeName = "غير مصنف";
+        let gradeClass = "bg-9";
+        const n = parseInt(id);
+        
+        if(n >= 202601 && n <= 202610) { gradeName = "الصف التاسع"; gradeClass = "bg-9"; }
+        else if(n >= 202611 && n <= 202620) { gradeName = "الصف العاشر"; gradeClass = "bg-10"; }
+        else if(n >= 202621 && n <= 202630) { gradeName = "الحادي عشر"; gradeClass = "bg-11"; }
+
+        const s = {
+            name: document.getElementById('reg-name').value, id: id,
+            father: document.getElementById('reg-father').value, mother: document.getElementById('reg-mother').value,
+            address: document.getElementById('reg-address').value, dob: document.getElementById('reg-dob').value,
+            fPhone: document.getElementById('reg-fPhone').value, mPhone: document.getElementById('reg-mPhone').value,
+            section: document.getElementById('reg-section').value, pass: document.getElementById('reg-pass').value,
+            grade: gradeName, gradeClass: gradeClass
+        };
+
+        if(!s.name || !s.id || !s.pass) return alert("أكمل البيانات الأساسية (الاسم، الـ ID، كلمة المرور)");
+        
+        btn.innerText = "جاري الإرسال للسحابة...";
+        btn.disabled = true;
+
+        // إرسال البيانات مع تحديد وقت زمني للفشل (Timeout)
+        const timeout = setTimeout(() => {
+            alert("يبدو أن هناك مشكلة في الاتصال بالسحابة، سيتم الحفظ محلياً مؤقتاً");
+            saveLocally(s);
+        }, 5000);
+
+        db.ref('students/' + s.id).set(s).then(() => {
+            clearTimeout(timeout);
+            alert("تم الحفظ بنجاح! الطالب " + s.name + " مضاف الآن للمكتبة.");
+            location.reload();
+        }).catch(e => {
+            clearTimeout(timeout);
+            saveLocally(s);
+        });
+    }
+
+    function saveLocally(s) {
+        let localDB = JSON.parse(localStorage.getItem('ips_db')) || [];
+        localDB.push(s);
+        localStorage.setItem('ips_db', JSON.stringify(localDB));
+        location.reload();
+    }
+
+    // نظام الدخول
+    function handleLogin() {
+        const u = document.getElementById('user-in').value;
+        const p = document.getElementById('pass-in').value;
+
+        if(u === "ibn khaldon" && p === "ITmohammedf0@") {
+            loadApp("محمد فرحان الغفري", "ADMIN", true);
+        } else {
+            db.ref('students/' + u).once('value').then(snap => {
+                const st = snap.val();
+                if(st && st.pass === p) loadApp(st.name, st.id, false, st);
+                else alert("بيانات الدخول غير صحيحة");
+            });
+        }
+    }
+    
+    // باقي الوظائف (loadApp, showTab, renderProfile) تبقى كما هي
 </script>
+
 </body>
 </html>
