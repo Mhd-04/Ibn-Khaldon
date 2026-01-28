@@ -3,133 +3,193 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام ابن خلدون المطور 2026</title>
+    <title>نظام إدارة ابن خلدون - الإصدار الاحترافي</title>
     <style>
-        :root { --primary: #6c5ce7; --secondary: #f39c12; --success: #27ae60; --bg: #f8f9fa; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; overflow-x: hidden; }
+        :root { --primary: #6c5ce7; --bg: #f8f9fa; --accent: #f39c12; --danger: #ff7675; --success: #27ae60; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; display: flex; }
         
-        /* شاشات الدخول */
-        .auth-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
-        .auth-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn-primary { background: var(--primary); color: white; }
-
-        /* الواجهة الرئيسية */
-        #main-app { display: none; }
-        .sidebar { background: white; width: 250px; height: 100vh; position: fixed; right: 0; top: 0; border-left: 1px solid #eee; padding: 20px; }
-        .content { margin-right: 250px; padding: 20px; }
-        .nav-item { padding: 12px; border-radius: 8px; cursor: pointer; margin-bottom: 5px; font-size: 14px; }
-        .nav-item:hover { background: #f0edff; }
-        .card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-
-        /* لوحة الموجه */
-        .admin-section { display: none; border: 2px solid var(--primary); padding: 15px; border-radius: 15px; margin-top: 20px; background: #f9f8ff; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
-        th, td { padding: 10px; border: 1px solid #eee; text-align: center; font-size: 13px; }
+        /* Sidebar - Learnata Style */
+        .sidebar { width: 260px; background: white; border-left: 1px solid #eee; height: 100vh; position: sticky; top: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .user-profile { text-align: center; margin-bottom: 30px; }
+        .avatar-container { position: relative; width: 100px; height: 100px; margin-bottom: 10px; }
+        .user-avatar { width: 100%; height: 100%; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover; background: #eee; }
+        .nav-item { width: 100%; padding: 12px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #555; transition: 0.3s; margin-bottom: 5px; }
+        .nav-item:hover, .nav-item.active { background: #f0edff; color: var(--primary); }
         
-        @media (max-width: 768px) { .sidebar { display: none; } .content { margin-right: 0; } }
+        /* Main Content */
+        .main-content { flex: 1; padding: 25px; overflow-y: auto; }
+        .card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        
+        /* Admin Panel Styles */
+        .admin-panel { display: none; border: 2px solid var(--accent); background: #fffdf9; position: relative; }
+        .status-badge { position: absolute; top: 10px; left: 10px; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .status-draft { background: #fff4e6; color: #d35400; }
+        .status-live { background: #e6fffa; color: #2ecc71; }
+        
+        .action-btns { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { flex: 1; padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.3s; }
+        .btn-publish { background: var(--success); color: white; }
+        .btn-unpublish { background: var(--danger); color: white; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; border-bottom: 1px solid #f0f0f0; text-align: center; }
+        .grading-input { width: 50px; text-align: center; padding: 5px; border: 1px solid #ddd; border-radius: 5px; }
+
+        /* Login Screen */
+        .auth-screen { position: fixed; inset: 0; background: white; z-index: 2000; display: flex; align-items: center; justify-content: center; }
+        .auth-card { background: white; padding: 35px; border-radius: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 350px; text-align: center; }
     </style>
 </head>
 <body>
 
-<div id="auth-area" class="auth-container">
-    <div id="login-box" class="auth-card">
-        <img src="logo.jpg" style="width:70px; border-radius:50%;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/5351/5351486.png'">
-        <h2>مرحباً بك</h2>
-        <input type="text" id="user" placeholder="الاسم أو الرقم">
-        <input type="password" id="pass" placeholder="كلمة السر">
-        <button class="btn btn-primary" onclick="login()">دخول</button>
-        <p style="font-size: 12px; color: #888; cursor: pointer;" onclick="alert('يرجى مراجعة الإدارة لإنشاء حساب')">نسيت كلمة السر؟</p>
+<div id="auth-area" class="auth-screen">
+    <div class="auth-card">
+        <h1 style="color:var(--primary); margin-bottom: 5px;">LEARNATA</h1>
+        <p style="color:#888; margin-bottom: 25px;">بوابة ثانوية ابن خلدون</p>
+        <input type="text" id="u-in" placeholder="اسم المستخدم أو ID" style="width:100%; padding:14px; margin-bottom:12px; border-radius:12px; border:1px solid #ddd; outline:none;">
+        <input type="password" id="p-in" placeholder="كلمة المرور" style="width:100%; padding:14px; margin-bottom:20px; border-radius:12px; border:1px solid #ddd; outline:none;">
+        <button onclick="login()" style="width:100%; padding:14px; background:var(--primary); color:white; border:none; border-radius:12px; cursor:pointer; font-weight:bold;">تسجيل الدخول</button>
     </div>
 </div>
 
-<div id="main-app">
-    <div class="sidebar">
-        <h3 style="color: var(--primary);">ابن خلدون</h3>
-        <div class="nav-item">🏠 الصفحة الرئيسية</div>
-        <div class="nav-item">📄 كشف العلامات</div>
-        <div class="nav-item">💰 الرسوم المالية</div>
-        <div id="admin-btn" class="nav-item" style="display:none; color: red; font-weight: bold;" onclick="showAdmin()">🛠 لوحة الموجه</div>
-        <button class="btn" style="margin-top: 20px;" onclick="location.reload()">خروج</button>
+<div class="sidebar">
+    <div class="user-profile">
+        <div class="avatar-container">
+            <img id="side-img" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" class="user-avatar">
+        </div>
+        <div id="side-name" style="font-weight:bold; color:#333;">زائر</div>
+        <div id="side-role" style="font-size:12px; color:#888;">طالب</div>
+    </div>
+    <div class="nav-item active">👤 ملفاتي</div>
+    <div class="nav-item">💳 المالية</div>
+    <div class="nav-item">📎 الدرجات</div>
+    <div id="admin-link" class="nav-item" style="display:none; color:var(--accent); font-weight:bold;" onclick="toggleAdmin()">🛠 لوحة الموجه</div>
+    <button onclick="location.reload()" style="margin-top:auto; width:100%; padding:12px; border-radius:12px; border:none; background:#eee; color:#666; cursor:pointer;">تسجيل الخروج</button>
+</div>
+
+<div class="main-content">
+    
+    <div id="admin-area" class="card admin-panel">
+        <div id="pub-status" class="status-badge status-draft">وضعية المسودة (مخفي)</div>
+        <h3 style="margin-top:20px;">📝 رصد وتدقيق العلامات</h3>
+        <p style="font-size:13px; color:#666;">أدخل العلامات هنا؛ لن تظهر للطلاب إلا عند الضغط على زر النشر.</p>
+        
+        <div id="admin-table-container"></div>
+        
+        <div class="action-btns">
+            <button class="btn btn-publish" onclick="setPublish(true)">🚀 نشر العلامات للطلاب</button>
+            <button class="btn btn-unpublish" onclick="setPublish(false)">📥 سحب العلامات (إخفاء)</button>
+        </div>
     </div>
 
-    <div class="content">
+    <div id="student-view">
         <div class="card">
-            <h2 id="welcome-msg"></h2>
-            <p id="user-info" style="color: #666;"></p>
+            <h2 id="wel-msg">أهلاً بك</h2>
+            <p id="grade-info" style="color:#888"></p>
         </div>
 
         <div class="card">
-            <h3 style="color: var(--secondary);">💰 الرسوم المالية</h3>
-            <table>
-                <tr><th>القسط الكلي</th><th>المسدد</th><th>المتبقي</th></tr>
-                <tr><td>1,500,000</td><td id="paid-val">800,000</td><td id="debt-val" style="color:red">700,000</td></tr>
-            </table>
-        </div>
-
-        <div id="admin-panel" class="admin-section">
-            <h3>📝 رصد علامات الطلاب</h3>
-            <p style="font-size: 12px; color: #666;">بصفتك موجه، يمكنك تعديل بيانات أي طالب هنا:</p>
-            <table>
-                <tr><th>الطالب</th><th>المادة</th><th>المذاكرة</th><th>الامتحان</th><th>تعديل</th></tr>
-                <tr>
-                    <td>محمد العلي</td>
-                    <td><input type="text" value="رياضيات" id="m-sub" style="margin:0; padding:5px;"></td>
-                    <td><input type="number" value="18" id="m-quiz" style="margin:0; padding:5px;"></td>
-                    <td><input type="number" value="55" id="m-exam" style="margin:0; padding:5px;"></td>
-                    <td><button onclick="saveGrades()" style="background:var(--success); color:white; border:none; padding:5px; border-radius:5px;">حفظ</button></td>
-                </tr>
-            </table>
-        </div>
-
-        <div class="card">
-            <h3 style="color: var(--primary);">📊 كشف العلامات الدراسي</h3>
-            <table id="grade-table">
-                <tr><th>المادة</th><th>المذاكرة</th><th>الامتحان</th><th>المجموع</th></tr>
-                <tr><td id="view-sub">الرياضيات</td><td id="view-quiz">18</td><td id="view-exam">55</td><td id="view-total">73</td></tr>
+            <h3>📊 النتائج الدراسية</h3>
+            <div id="no-grades-msg" style="padding:40px; text-align:center; color:#999; border:2px dashed #eee; border-radius:20px;">
+                ⚙️ جاري رصد العلامات من قبل الموجه.. سيتم إشعاركم عند النشر.
+            </div>
+            <table id="grade-table" style="display:none;">
+                <thead>
+                    <tr><th>المادة</th><th>المذاكرة</th><th>الامتحان</th><th>المجموع</th></tr>
+                </thead>
+                <tbody id="grade-body"></tbody>
             </table>
         </div>
     </div>
 </div>
 
 <script>
-    function login() {
-        const u = document.getElementById('user').value;
-        const p = document.getElementById('pass').value;
+    // نظام البيانات الذكي
+    let isPublished = false;
+    let students = [
+        { id: "202311362", name: "محمد خالد العلي", grade: "ثالث ثانوي", quiz: 0, exam: 0, pass: "123", img: "https://i.pravatar.cc/150?u=1" },
+        { id: "202311400", name: "أحمد الحمصي", grade: "تاسع", quiz: 0, exam: 0, pass: "123", img: "https://i.pravatar.cc/150?u=2" }
+    ];
 
-        if (u === "ibn khaldon" && p === "ITmohammedf0@") {
-            document.getElementById('admin-btn').style.display = 'block';
-            enterApp("الموجه العام", "إدارة النظام");
+    function login() {
+        const u = document.getElementById('u-in').value;
+        const p = document.getElementById('p-in').value;
+
+        if(u === "ibn khaldon" && p === "ITmohammedf0@") {
+            setupUI("الموجه العام", "إدارة", true);
         } else {
-            enterApp(u, "طالب - ثالث ثانوي");
+            const st = students.find(s => s.id === u && s.pass === p);
+            if(st) setupUI(st.name, st.grade, false, st);
+            else alert("عذراً، بيانات الدخول غير صحيحة");
         }
     }
 
-    function enterApp(name, info) {
+    function setupUI(name, role, isAdmin, data = null) {
         document.getElementById('auth-area').style.display = 'none';
-        document.getElementById('main-app').style.display = 'block';
-        document.getElementById('welcome-msg').innerText = "أهلاً بك، " + name;
-        document.getElementById('user-info').innerText = info;
+        document.getElementById('side-name').innerText = name;
+        document.getElementById('side-role').innerText = role;
+        
+        if(isAdmin) {
+            document.getElementById('admin-link').style.display = 'flex';
+            document.getElementById('side-img').src = "https://cdn-icons-png.flaticon.com/512/9440/9440932.png";
+            renderAdmin();
+        } else {
+            document.getElementById('wel-msg').innerText = "أهلاً بك، " + name;
+            document.getElementById('grade-info').innerText = "المرحلة الدراسية: " + role;
+            document.getElementById('side-img').src = data.img;
+            refreshStudentTable(data);
+        }
     }
 
-    function showAdmin() {
-        const panel = document.getElementById('admin-panel');
-        panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+    function toggleAdmin() {
+        const a = document.getElementById('admin-area');
+        a.style.display = (a.style.display === 'block') ? 'none' : 'block';
     }
 
-    function saveGrades() {
-        // هذه الوظيفة تأخذ القيم من خانات الموجه وتضعها في جدول الطالب
-        const sub = document.getElementById('m-sub').value;
-        const quiz = document.getElementById('m-quiz').value;
-        const exam = document.getElementById('m-exam').value;
-        
-        document.getElementById('view-sub').innerText = sub;
-        document.getElementById('view-quiz').innerText = quiz;
-        document.getElementById('view-exam').innerText = exam;
-        document.getElementById('view-total').innerText = parseInt(quiz) + parseInt(exam);
-        
-        alert("تم رصد العلامات بنجاح وتحديث كشف الطالب!");
+    function renderAdmin() {
+        const container = document.getElementById('admin-table-container');
+        let html = `<table><tr><th>اسم الطالب</th><th>المذاكرة</th><th>الامتحان</th></tr>`;
+        students.forEach(s => {
+            html += `<tr>
+                <td>${s.name}</td>
+                <td><input type="number" class="grading-input" onchange="updateScore('${s.id}', 'quiz', this.value)" value="${s.quiz}"></td>
+                <td><input type="number" class="grading-input" onchange="updateScore('${s.id}', 'exam', this.value)" value="${s.exam}"></td>
+            </tr>`;
+        });
+        html += `</table>`;
+        container.innerHTML = html;
+    }
+
+    function updateScore(id, type, val) {
+        const st = students.find(s => s.id === id);
+        if(st) st[type] = parseInt(val) || 0;
+    }
+
+    function setPublish(status) {
+        isPublished = status;
+        const badge = document.getElementById('pub-status');
+        if(status) {
+            badge.innerText = "🚀 الحالة: منشورة للطلاب";
+            badge.className = "status-badge status-live";
+            alert("تم نشر العلامات بنجاح! يمكن للطلاب الآن رؤية نتائجهم.");
+        } else {
+            badge.innerText = "وضعية المسودة (مخفي)";
+            badge.className = "status-badge status-draft";
+            alert("تم سحب العلامات وإخفاؤها عن الطلاب.");
+        }
+    }
+
+    function refreshStudentTable(st) {
+        if(isPublished) {
+            document.getElementById('no-grades-msg').style.display = 'none';
+            document.getElementById('grade-table').style.display = 'table';
+            document.getElementById('grade-body').innerHTML = `
+                <tr><td>الرياضيات</td><td>${st.quiz}</td><td>${st.exam}</td><td>${st.quiz + st.exam}</td></tr>
+            `;
+        } else {
+            document.getElementById('no-grades-msg').style.display = 'block';
+            document.getElementById('grade-table').style.display = 'none';
+        }
     }
 </script>
 </body>
