@@ -3,192 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام إدارة ابن خلدون - الإصدار الاحترافي</title>
+    <title>ثانوية ومعهد ابن خلدون الخاصة IPS</title>
     <style>
-        :root { --primary: #6c5ce7; --bg: #f8f9fa; --accent: #f39c12; --danger: #ff7675; --success: #27ae60; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; display: flex; }
+        :root { --primary: #6c5ce7; --bg: #f4f7fe; --sidebar-w: 260px; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; }
         
-        /* Sidebar - Learnata Style */
-        .sidebar { width: 260px; background: white; border-left: 1px solid #eee; height: 100vh; position: sticky; top: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .user-profile { text-align: center; margin-bottom: 30px; }
-        .avatar-container { position: relative; width: 100px; height: 100px; margin-bottom: 10px; }
-        .user-avatar { width: 100%; height: 100%; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover; background: #eee; }
-        .nav-item { width: 100%; padding: 12px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #555; transition: 0.3s; margin-bottom: 5px; }
-        .nav-item:hover, .nav-item.active { background: #f0edff; color: var(--primary); }
-        
-        /* Main Content */
-        .main-content { flex: 1; padding: 25px; overflow-y: auto; }
-        .card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        
-        /* Admin Panel Styles */
-        .admin-panel { display: none; border: 2px solid var(--accent); background: #fffdf9; position: relative; }
-        .status-badge { position: absolute; top: 10px; left: 10px; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; }
-        .status-draft { background: #fff4e6; color: #d35400; }
-        .status-live { background: #e6fffa; color: #2ecc71; }
-        
-        .action-btns { display: flex; gap: 10px; margin-top: 20px; }
-        .btn { flex: 1; padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.3s; }
-        .btn-publish { background: var(--success); color: white; }
-        .btn-unpublish { background: var(--danger); color: white; }
-        
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 12px; border-bottom: 1px solid #f0f0f0; text-align: center; }
-        .grading-input { width: 50px; text-align: center; padding: 5px; border: 1px solid #ddd; border-radius: 5px; }
+        .app-container { display: none; min-height: 100vh; width: 100%; }
+        .sidebar { width: var(--sidebar-w); background: white; border-left: 1px solid #eee; padding: 20px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0; transition: 0.3s; }
+        .main-content { flex-grow: 1; padding: 20px; width: calc(100% - var(--sidebar-w)); box-sizing: border-box; }
 
-        /* Login Screen */
+        @media (max-width: 768px) {
+            .app-container { flex-direction: column; }
+            .sidebar { width: 100%; border-left: none; border-bottom: 1px solid #eee; }
+            .main-content { width: 100%; }
+        }
+
+        .card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 15px; }
+        .info-item { background: #f8f9ff; padding: 12px; border-radius: 12px; border: 1px solid #ecefff; }
+        .info-label { font-size: 11px; color: #888; display: block; margin-bottom: 4px; }
+        .info-value { font-size: 14px; font-weight: 600; color: #333; }
+
         .auth-screen { position: fixed; inset: 0; background: white; z-index: 2000; display: flex; align-items: center; justify-content: center; }
-        .auth-card { background: white; padding: 35px; border-radius: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 350px; text-align: center; }
+        .btn-main { background: var(--primary); color: white; border: none; padding: 14px; width: 100%; border-radius: 12px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div id="auth-area" class="auth-screen">
-    <div class="auth-card">
-        <h1 style="color:var(--primary); margin-bottom: 5px;">LEARNATA</h1>
-        <p style="color:#888; margin-bottom: 25px;">بوابة ثانوية ابن خلدون</p>
-        <input type="text" id="u-in" placeholder="اسم المستخدم أو ID" style="width:100%; padding:14px; margin-bottom:12px; border-radius:12px; border:1px solid #ddd; outline:none;">
-        <input type="password" id="p-in" placeholder="كلمة المرور" style="width:100%; padding:14px; margin-bottom:20px; border-radius:12px; border:1px solid #ddd; outline:none;">
-        <button onclick="login()" style="width:100%; padding:14px; background:var(--primary); color:white; border:none; border-radius:12px; cursor:pointer; font-weight:bold;">تسجيل الدخول</button>
+<div id="auth-screen" class="auth-screen">
+    <div style="width:100%; max-width:350px; text-align:center; padding:20px;">
+        <h2 style="color:var(--primary)">IPS</h2>
+        <input type="text" id="user-in" placeholder="ID الطالب" style="width:100%; padding:12px; margin:8px 0; border-radius:10px; border:1px solid #ddd;">
+        <input type="password" id="pass-in" placeholder="كلمة المرور" style="width:100%; padding:12px; margin:8px 0; border-radius:10px; border:1px solid #ddd;">
+        <button class="btn-main" onclick="login()">دخول</button>
     </div>
 </div>
 
-<div class="sidebar">
-    <div class="user-profile">
-        <div class="avatar-container">
-            <img id="side-img" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" class="user-avatar">
+<div id="main-app" class="app-container">
+    <div class="sidebar">
+        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" style="width:80px; border-radius:50%; border:3px solid var(--primary);">
+        <h3 id="side-name">اسم الطالب</h3>
+        <p id="side-id" style="color:#888; font-size:12px;">ID: ---</p>
+        <div style="width:100%; margin-top:20px;">
+            <div style="padding:12px; background:#f0edff; color:var(--primary); border-radius:10px; margin-bottom:5px; font-weight:bold;">👤 ملفاتي</div>
+            <div style="padding:12px; color:#666;">💳 المالية</div>
+            <div style="padding:12px; color:#666;">📎 الدرجات</div>
         </div>
-        <div id="side-name" style="font-weight:bold; color:#333;">زائر</div>
-        <div id="side-role" style="font-size:12px; color:#888;">طالب</div>
-    </div>
-    <div class="nav-item active">👤 ملفاتي</div>
-    <div class="nav-item">💳 المالية</div>
-    <div class="nav-item">📎 الدرجات</div>
-    <div id="admin-link" class="nav-item" style="display:none; color:var(--accent); font-weight:bold;" onclick="toggleAdmin()">🛠 لوحة الموجه</div>
-    <button onclick="location.reload()" style="margin-top:auto; width:100%; padding:12px; border-radius:12px; border:none; background:#eee; color:#666; cursor:pointer;">تسجيل الخروج</button>
-</div>
-
-<div class="main-content">
-    
-    <div id="admin-area" class="card admin-panel">
-        <div id="pub-status" class="status-badge status-draft">وضعية المسودة (مخفي)</div>
-        <h3 style="margin-top:20px;">📝 رصد وتدقيق العلامات</h3>
-        <p style="font-size:13px; color:#666;">أدخل العلامات هنا؛ لن تظهر للطلاب إلا عند الضغط على زر النشر.</p>
-        
-        <div id="admin-table-container"></div>
-        
-        <div class="action-btns">
-            <button class="btn btn-publish" onclick="setPublish(true)">🚀 نشر العلامات للطلاب</button>
-            <button class="btn btn-unpublish" onclick="setPublish(false)">📥 سحب العلامات (إخفاء)</button>
-        </div>
+        <button onclick="location.reload()" style="margin-top:auto; width:100%; padding:10px; background:#ff7675; color:white; border:none; border-radius:10px;">خروج</button>
     </div>
 
-    <div id="student-view">
+    <div class="main-content">
         <div class="card">
-            <h2 id="wel-msg">أهلاً بك</h2>
-            <p id="grade-info" style="color:#888"></p>
+            <h3 style="color:var(--primary); margin-top:0; display:flex; align-items:center; gap:8px;">
+                <span>👤</span> بيانات الطالب الشخصية
+            </h3>
+            <div class="info-grid" id="profile-details">
+                </div>
         </div>
 
-        <div class="card">
-            <h3>📊 النتائج الدراسية</h3>
-            <div id="no-grades-msg" style="padding:40px; text-align:center; color:#999; border:2px dashed #eee; border-radius:20px;">
-                ⚙️ جاري رصد العلامات من قبل الموجه.. سيتم إشعاركم عند النشر.
-            </div>
-            <table id="grade-table" style="display:none;">
-                <thead>
-                    <tr><th>المادة</th><th>المذاكرة</th><th>الامتحان</th><th>المجموع</th></tr>
-                </thead>
-                <tbody id="grade-body"></tbody>
-            </table>
+        <div class="card" style="border-right: 5px solid #f39c12;">
+            <h4 style="margin:0; color:#f39c12;">📢 الإعلانات الرسمية</h4>
+            <p id="announcement" style="margin:10px 0 0; font-size:14px; color:#555;">لا يوجد إعلانات حالياً.</p>
         </div>
     </div>
 </div>
 
 <script>
-    // نظام البيانات الذكي
-    let isPublished = false;
-    let students = [
-        { id: "202311362", name: "محمد خالد العلي", grade: "ثالث ثانوي", quiz: 0, exam: 0, pass: "123", img: "https://i.pravatar.cc/150?u=1" },
-        { id: "202311400", name: "أحمد الحمصي", grade: "تاسع", quiz: 0, exam: 0, pass: "123", img: "https://i.pravatar.cc/150?u=2" }
-    ];
+    // بيانات افتراضية للطالب حسب طلبك لعام 2026
+    const studentData = {
+        "202311362": {
+            name: "محمد خالد العلي",
+            father: "خالد",
+            mother: "فاطمة",
+            address: "حمص - الإنشاءات",
+            dob: "2008/01/01",
+            fPhone: "0933xxxxxx",
+            mPhone: "0944xxxxxx",
+            grade: "ثالث ثانوي",
+            section: "الأولى",
+            id: "202311362",
+            pass: "123"
+        }
+    };
 
     function login() {
-        const u = document.getElementById('u-in').value;
-        const p = document.getElementById('p-in').value;
+        const id = document.getElementById('user-in').value;
+        const pass = document.getElementById('pass-in').value;
+        const st = studentData[id];
 
-        if(u === "ibn khaldon" && p === "ITmohammedf0@") {
-            setupUI("الموجه العام", "إدارة", true);
+        if(st && st.pass === pass) {
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('main-app').style.display = 'flex';
+            document.getElementById('side-name').innerText = st.name;
+            document.getElementById('side-id').innerText = "ID: " + st.id;
+            loadProfile(st);
         } else {
-            const st = students.find(s => s.id === u && s.pass === p);
-            if(st) setupUI(st.name, st.grade, false, st);
-            else alert("عذراً، بيانات الدخول غير صحيحة");
+            alert("بيانات الدخول غير صحيحة");
         }
     }
 
-    function setupUI(name, role, isAdmin, data = null) {
-        document.getElementById('auth-area').style.display = 'none';
-        document.getElementById('side-name').innerText = name;
-        document.getElementById('side-role').innerText = role;
-        
-        if(isAdmin) {
-            document.getElementById('admin-link').style.display = 'flex';
-            document.getElementById('side-img').src = "https://cdn-icons-png.flaticon.com/512/9440/9440932.png";
-            renderAdmin();
-        } else {
-            document.getElementById('wel-msg').innerText = "أهلاً بك، " + name;
-            document.getElementById('grade-info').innerText = "المرحلة الدراسية: " + role;
-            document.getElementById('side-img').src = data.img;
-            refreshStudentTable(data);
-        }
-    }
+    function loadProfile(st) {
+        const container = document.getElementById('profile-details');
+        const labels = {
+            name: "الاسم", father: "الأب", mother: "الأم",
+            address: "العنوان", dob: "المواليد", fPhone: "هاتف الأب",
+            mPhone: "هاتف الأم", grade: "الصف", section: "الشعبة", id: "ID الطالب"
+        };
 
-    function toggleAdmin() {
-        const a = document.getElementById('admin-area');
-        a.style.display = (a.style.display === 'block') ? 'none' : 'block';
-    }
-
-    function renderAdmin() {
-        const container = document.getElementById('admin-table-container');
-        let html = `<table><tr><th>اسم الطالب</th><th>المذاكرة</th><th>الامتحان</th></tr>`;
-        students.forEach(s => {
-            html += `<tr>
-                <td>${s.name}</td>
-                <td><input type="number" class="grading-input" onchange="updateScore('${s.id}', 'quiz', this.value)" value="${s.quiz}"></td>
-                <td><input type="number" class="grading-input" onchange="updateScore('${s.id}', 'exam', this.value)" value="${s.exam}"></td>
-            </tr>`;
-        });
-        html += `</table>`;
-        container.innerHTML = html;
-    }
-
-    function updateScore(id, type, val) {
-        const st = students.find(s => s.id === id);
-        if(st) st[type] = parseInt(val) || 0;
-    }
-
-    function setPublish(status) {
-        isPublished = status;
-        const badge = document.getElementById('pub-status');
-        if(status) {
-            badge.innerText = "🚀 الحالة: منشورة للطلاب";
-            badge.className = "status-badge status-live";
-            alert("تم نشر العلامات بنجاح! يمكن للطلاب الآن رؤية نتائجهم.");
-        } else {
-            badge.innerText = "وضعية المسودة (مخفي)";
-            badge.className = "status-badge status-draft";
-            alert("تم سحب العلامات وإخفاؤها عن الطلاب.");
-        }
-    }
-
-    function refreshStudentTable(st) {
-        if(isPublished) {
-            document.getElementById('no-grades-msg').style.display = 'none';
-            document.getElementById('grade-table').style.display = 'table';
-            document.getElementById('grade-body').innerHTML = `
-                <tr><td>الرياضيات</td><td>${st.quiz}</td><td>${st.exam}</td><td>${st.quiz + st.exam}</td></tr>
-            `;
-        } else {
-            document.getElementById('no-grades-msg').style.display = 'block';
-            document.getElementById('grade-table').style.display = 'none';
+        container.innerHTML = "";
+        for (let key in labels) {
+            container.innerHTML += `
+                <div class="info-item">
+                    <span class="info-label">${labels[key]}</span>
+                    <span class="info-value">${st[key]}</span>
+                </div>`;
         }
     }
 </script>
