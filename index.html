@@ -8,8 +8,16 @@
         :root { --primary: #6c5ce7; --bg: #f4f7fe; --sidebar-w: 260px; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; }
         
+        /* شاشة الدخول والتسجيل */
+        .auth-screen { position: fixed; inset: 0; background: white; z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .auth-card { width: 100%; max-width: 380px; text-align: center; background: white; padding: 30px; border-radius: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .school-logo { width: 80px; height: 80px; margin-bottom: 10px; object-fit: contain; }
+        input, select { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; outline: none; }
+        .btn-main { background: var(--primary); color: white; border: none; padding: 14px; width: 100%; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 16px; }
+
+        /* الواجهة الداخلية */
         .app-container { display: none; min-height: 100vh; width: 100%; }
-        .sidebar { width: var(--sidebar-w); background: white; border-left: 1px solid #eee; padding: 20px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0; transition: 0.3s; }
+        .sidebar { width: var(--sidebar-w); background: white; border-left: 1px solid #eee; padding: 20px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
         .main-content { flex-grow: 1; padding: 20px; width: calc(100% - var(--sidebar-w)); box-sizing: border-box; }
 
         @media (max-width: 768px) {
@@ -21,102 +29,126 @@
         .card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 15px; }
         .info-item { background: #f8f9ff; padding: 12px; border-radius: 12px; border: 1px solid #ecefff; }
-        .info-label { font-size: 11px; color: #888; display: block; margin-bottom: 4px; }
+        .info-label { font-size: 11px; color: #888; display: block; }
         .info-value { font-size: 14px; font-weight: 600; color: #333; }
-
-        .auth-screen { position: fixed; inset: 0; background: white; z-index: 2000; display: flex; align-items: center; justify-content: center; }
-        .btn-main { background: var(--primary); color: white; border: none; padding: 14px; width: 100%; border-radius: 12px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="auth-screen" class="auth-screen">
-    <div style="width:100%; max-width:350px; text-align:center; padding:20px;">
-        <h2 style="color:var(--primary)">IPS</h2>
-        <input type="text" id="user-in" placeholder="ID الطالب" style="width:100%; padding:12px; margin:8px 0; border-radius:10px; border:1px solid #ddd;">
-        <input type="password" id="pass-in" placeholder="كلمة المرور" style="width:100%; padding:12px; margin:8px 0; border-radius:10px; border:1px solid #ddd;">
-        <button class="btn-main" onclick="login()">دخول</button>
+    <div id="login-box" class="auth-card">
+        <img src="https://cdn-icons-png.flaticon.com/512/5351/5351042.png" class="school-logo" alt="Logo">
+        <h2 style="color:var(--primary); margin:0;">IPS</h2>
+        <p style="font-size:14px; color:#666; margin-bottom:20px;">ثانوية ومعهد ابن خلدون الخاصة</p>
+        
+        <input type="text" id="user-in" placeholder="ID الطالب أو اسم المستخدم">
+        <input type="password" id="pass-in" placeholder="كلمة المرور">
+        <button class="btn-main" onclick="handleLogin()">تسجيل الدخول</button>
+        
+        <p style="font-size: 13px; color: var(--primary); cursor: pointer; margin-top: 15px;" onclick="toggleAuth(true)">ألا تملك حساب؟ سجل الآن</p>
+    </div>
+
+    <div id="register-box" class="auth-card" style="display:none;">
+        <h3 style="color:var(--primary)">إنشاء حساب طالب جديد</h3>
+        <input type="text" id="reg-name" placeholder="الاسم الثلاثي">
+        <input type="text" id="reg-id" placeholder="الرقم الدراسي (ID)">
+        <select id="reg-grade">
+            <option value="تاسع">تاسع</option>
+            <option value="عاشر">عاشر</option>
+            <option value="حادي عشر">حادي عشر</option>
+            <option value="ثالث ثانوي">ثالث ثانوي</option>
+        </select>
+        <input type="password" id="reg-pass" placeholder="كلمة المرور">
+        <button class="btn-main" onclick="handleRegister()">تأكيد الحساب</button>
+        <p style="font-size: 13px; color: var(--primary); cursor: pointer; margin-top: 15px;" onclick="toggleAuth(false)">لديك حساب بالفعل؟ سجل دخول</p>
     </div>
 </div>
 
 <div id="main-app" class="app-container">
     <div class="sidebar">
+        <img src="https://cdn-icons-png.flaticon.com/512/5351/5351042.png" style="width:60px; margin-bottom:15px;">
         <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" style="width:80px; border-radius:50%; border:3px solid var(--primary);">
-        <h3 id="side-name">اسم الطالب</h3>
+        <h3 id="side-name" style="margin:10px 0 0;">اسم الطالب</h3>
         <p id="side-id" style="color:#888; font-size:12px;">ID: ---</p>
+        
         <div style="width:100%; margin-top:20px;">
-            <div style="padding:12px; background:#f0edff; color:var(--primary); border-radius:10px; margin-bottom:5px; font-weight:bold;">👤 ملفاتي</div>
+            <div style="padding:12px; background:#f0edff; color:var(--primary); border-radius:10px; margin-bottom:8px; font-weight:bold;">👤 ملفاتي</div>
             <div style="padding:12px; color:#666;">💳 المالية</div>
             <div style="padding:12px; color:#666;">📎 الدرجات</div>
         </div>
-        <button onclick="location.reload()" style="margin-top:auto; width:100%; padding:10px; background:#ff7675; color:white; border:none; border-radius:10px;">خروج</button>
+        <button onclick="location.reload()" style="margin-top:auto; width:100%; padding:10px; background:#ff7675; color:white; border:none; border-radius:10px; cursor:pointer;">خروج</button>
     </div>
 
     <div class="main-content">
         <div class="card">
-            <h3 style="color:var(--primary); margin-top:0; display:flex; align-items:center; gap:8px;">
-                <span>👤</span> بيانات الطالب الشخصية
-            </h3>
-            <div class="info-grid" id="profile-details">
-                </div>
-        </div>
-
-        <div class="card" style="border-right: 5px solid #f39c12;">
-            <h4 style="margin:0; color:#f39c12;">📢 الإعلانات الرسمية</h4>
-            <p id="announcement" style="margin:10px 0 0; font-size:14px; color:#555;">لا يوجد إعلانات حالياً.</p>
+            <h3 style="color:var(--primary); margin:0;">👤 بيانات الطالب (ملفاتي)</h3>
+            <div class="info-grid" id="profile-details"></div>
         </div>
     </div>
 </div>
 
 <script>
-    // بيانات افتراضية للطالب حسب طلبك لعام 2026
-    const studentData = {
-        "202311362": {
-            name: "محمد خالد العلي",
-            father: "خالد",
-            mother: "فاطمة",
-            address: "حمص - الإنشاءات",
-            dob: "2008/01/01",
-            fPhone: "0933xxxxxx",
-            mPhone: "0944xxxxxx",
-            grade: "ثالث ثانوي",
-            section: "الأولى",
-            id: "202311362",
-            pass: "123"
+    // بيانات الموجه الثابتة
+    const ADMIN_USER = "ibn khaldon";
+    const ADMIN_PASS = "ITmohammedf0@";
+
+    // قاعدة بيانات محلية للطلاب المسجلين
+    let db = JSON.parse(localStorage.getItem('ips_students')) || {};
+
+    function toggleAuth(isReg) {
+        document.getElementById('login-box').style.display = isReg ? 'none' : 'block';
+        document.getElementById('register-box').style.display = isReg ? 'block' : 'none';
+    }
+
+    function handleRegister() {
+        const name = document.getElementById('reg-name').value;
+        const id = document.getElementById('reg-id').value;
+        const grade = document.getElementById('reg-grade').value;
+        const pass = document.getElementById('reg-pass').value;
+
+        if(!name || !id || !pass) return alert("يرجى تعبئة كافة الخانات");
+        
+        db[id] = { name, id, grade, pass, father: "قيد التحديث", mother: "قيد التحديث", address: "قيد التحديث", dob: "قيد التحديث", fPhone: "-", mPhone: "-", section: "غير محدد" };
+        localStorage.setItem('ips_students', JSON.stringify(db));
+        alert("تم إنشاء حسابك! يمكنك الدخول الآن.");
+        toggleAuth(false);
+    }
+
+    function handleLogin() {
+        const u = document.getElementById('user-in').value.trim();
+        const p = document.getElementById('pass-in').value.trim();
+
+        // دخول الموجه
+        if(u === ADMIN_USER && p === ADMIN_PASS) {
+            alert("مرحباً بك أيها الموجه العام");
+            enterApp("الموجه العام", "إدارة", "ADMIN-001");
+            return;
         }
-    };
 
-    function login() {
-        const id = document.getElementById('user-in').value;
-        const pass = document.getElementById('pass-in').value;
-        const st = studentData[id];
-
-        if(st && st.pass === pass) {
-            document.getElementById('auth-screen').style.display = 'none';
-            document.getElementById('main-app').style.display = 'flex';
-            document.getElementById('side-name').innerText = st.name;
-            document.getElementById('side-id').innerText = "ID: " + st.id;
-            loadProfile(st);
+        // دخول الطالب
+        const st = db[u];
+        if(st && st.pass === p) {
+            enterApp(st.name, st.grade, st.id, st);
         } else {
-            alert("بيانات الدخول غير صحيحة");
+            alert("بيانات غير صحيحة. تأكد من الـ ID وكلمة المرور.");
         }
+    }
+
+    function enterApp(name, grade, id, fullData = null) {
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'flex';
+        document.getElementById('side-name').innerText = name;
+        document.getElementById('side-id').innerText = "ID: " + id;
+        
+        if(fullData) loadProfile(fullData);
     }
 
     function loadProfile(st) {
         const container = document.getElementById('profile-details');
-        const labels = {
-            name: "الاسم", father: "الأب", mother: "الأم",
-            address: "العنوان", dob: "المواليد", fPhone: "هاتف الأب",
-            mPhone: "هاتف الأم", grade: "الصف", section: "الشعبة", id: "ID الطالب"
-        };
-
+        const labels = { name: "الاسم", father: "الأب", mother: "الأم", address: "العنوان", dob: "المواليد", fPhone: "هاتف الأب", mPhone: "هاتف الأم", grade: "الصف", section: "الشعبة", id: "ID الطالب" };
         container.innerHTML = "";
         for (let key in labels) {
-            container.innerHTML += `
-                <div class="info-item">
-                    <span class="info-label">${labels[key]}</span>
-                    <span class="info-value">${st[key]}</span>
-                </div>`;
+            container.innerHTML += `<div class="info-item"><span class="info-label">${labels[key]}</span><span class="info-value">${st[key] || '-'}</span></div>`;
         }
     }
 </script>
