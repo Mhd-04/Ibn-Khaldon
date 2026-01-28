@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام IPS - ثانوية ابن خلدون</title>
+    <title>نظام IPS السحابي - ابن خلدون</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         :root { --primary: #8e44ad; --bg: #f4f7fe; --sidebar-w: 260px; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; }
@@ -11,14 +13,14 @@
         .auth-card { width: 100%; max-width: 400px; text-align: center; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
         .btn-main { background: var(--primary); color: white; border: none; padding: 14px; width: 100%; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        .app-container { display: none; min-height: 100vh; }
+        .app-container { display: none; min-height: 100vh; display: flex; }
         .sidebar { width: var(--sidebar-w); background: white; border-left: 1px solid #eee; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .main-content { flex-grow: 1; padding: 20px; }
         .card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
-        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: center; font-size: 14px; }
-        .status-on { color: #27ae60; font-weight: bold; }
-        @media (max-width: 768px) { .app-container { flex-direction: column; } .sidebar { width: 100%; border-left: 0; border-bottom: 1px solid #eee; } }
+        .student-box { border: 1px solid #eee; padding: 15px; border-radius: 12px; margin-bottom: 10px; background: #fff; display: flex; justify-content: space-between; align-items: center; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; color: white; }
+        .bg-9 { background: #3498db; } .bg-10 { background: #2ecc71; } .bg-11 { background: #e67e22; }
+        @media (max-width: 768px) { .app-container { flex-direction: column; } .sidebar { width: 100%; border-left: 0; } }
     </style>
 </head>
 <body>
@@ -26,7 +28,7 @@
 <div id="auth-screen" class="auth-screen">
     <div id="login-box" class="auth-card">
         <img src="1000219663.jpg" style="width:120px; margin-bottom:10px;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/5351/5351042.png'">
-        <h2 style="color:var(--primary); margin:0;">IPS</h2>
+        <h2 style="color:var(--primary); margin:0;">IPS السحابي</h2>
         <input type="text" id="user-in" placeholder="ID الطالب أو اسم الموجه">
         <input type="password" id="pass-in" placeholder="كلمة المرور">
         <button class="btn-main" onclick="handleLogin()">دخول</button>
@@ -37,116 +39,110 @@
         <h3 style="color:var(--primary)">تسجيل طالب جديد</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
             <input type="text" id="reg-name" placeholder="الاسم">
-            <input type="text" id="reg-id" placeholder="ID">
+            <input type="number" id="reg-id" placeholder="ID (202601 - 202630)">
             <input type="text" id="reg-father" placeholder="الأب">
             <input type="text" id="reg-mother" placeholder="الأم">
             <input type="date" id="reg-dob">
             <input type="text" id="reg-address" placeholder="العنوان">
             <input type="tel" id="reg-fPhone" placeholder="هاتف الأب">
             <input type="tel" id="reg-mPhone" placeholder="هاتف الأم">
-            <select id="reg-grade"><option>تاسع</option><option>بكالوريا</option></select>
             <input type="text" id="reg-section" placeholder="الشعبة">
+            <input type="password" id="reg-pass" placeholder="كلمة المرور">
         </div>
-        <input type="password" id="reg-pass" placeholder="كلمة المرور">
-        <button class="btn-main" onclick="handleRegister()">حفظ الحساب</button>
+        <button class="btn-main" onclick="handleRegister()">حفظ الحساب سحابياً</button>
         <p onclick="toggleAuth(false)" style="cursor:pointer; color:#666; font-size:12px; margin-top:10px;">رجوع</p>
     </div>
 </div>
 
-<div id="main-app" class="app-container">
+<div id="main-app" class="app-container" style="display:none;">
     <div class="sidebar">
         <img src="1000219663.jpg" style="width:70px; margin-bottom:10px;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/5351/5351042.png'">
         <h3 id="side-name">---</h3>
         <p id="side-id" style="color:#888; font-size:12px;">ID: ---</p>
         <div style="width:100%; margin-top:20px;">
             <div id="profile-tab-btn" style="padding:12px; background:#f0edff; color:var(--primary); border-radius:10px; cursor:pointer;" onclick="showTab('profile')">👤 ملفاتي</div>
-            <div id="admin-only-btn" style="display:none; padding:12px; color:#f39c12; cursor:pointer; font-weight:bold;" onclick="showTab('admin')">🛠 لوحة الموجه</div>
+            <div id="admin-only-btn" style="display:none; padding:12px; color:#f39c12; cursor:pointer; font-weight:bold;" onclick="showTab('admin')">📚 مكتبة الطلاب</div>
         </div>
-        <button onclick="location.reload()" style="margin-top:auto; width:100%; padding:10px; background:#ff7675; color:white; border:none; border-radius:10px; cursor:pointer;">خروج</button>
+        <button onclick="location.reload()" style="margin-top:auto; width:100%; padding:10px; background:#ff7675; color:white; border:none; border-radius:10px;">خروج</button>
     </div>
 
     <div class="main-content">
         <div id="tab-profile" class="card">
-            <h3>📇 بيانات الطالب (ملفاتي)</h3>
+            <h3>📇 ملفي الشخصي</h3>
             <div id="profile-info" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div>
-            <hr>
-            <h3>📊 علاماتي</h3>
-            <table id="student-grades-table">
-                <thead><tr><th>المادة</th><th>مذاكرة</th><th>امتحان</th></tr></thead>
-                <tbody id="st-grades-body"></tbody>
-            </table>
         </div>
 
-        <div id="tab-admin" class="card" style="display:none; border:2px solid #f39c12;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3>🛠 رصد العلامات</h3>
-                <button class="btn-main" style="width:auto; background:#27ae60;" onclick="publishGrades()">🚀 نشر النتائج</button>
-            </div>
-            <div class="card" style="background:#fffcf5;">
-                <h4>👤 بيانات الموجه</h4>
-                <input type="text" id="adm-name-edit" placeholder="اسمك">
-                <input type="text" id="adm-role-edit" placeholder="المنصب">
-                <button class="btn-main" style="background:#f39c12; height:40px; padding:0;" onclick="saveAdminInfo()">حفظ بياناتي</button>
-            </div>
-            <table>
-                <thead><tr><th>الطالب</th><th>ID</th><th>المذاكرة</th><th>الامتحان</th><th>إجراء</th></tr></thead>
-                <tbody id="admin-list-body"></tbody>
-            </table>
+        <div id="tab-admin" class="card" style="display:none;">
+            <h3>📚 مكتبة الطلاب (المسجلون سحابياً)</h3>
+            <div id="students-library">جاري تحميل البيانات من السحابة...</div>
         </div>
     </div>
 </div>
 
 <script>
-    // قائمة طلاب افتراضية لكي لا يظهر الجدول فارغاً أبداً
-    const defaultStudents = [
-        { name: "محمد خالد العلي", id: "202311632", grade: "بكالوريا", father: "خالد", mother: "مريم", dob: "2006-05-10", address: "حمص", fPhone: "0933", mPhone: "0944", section: "1", pass: "123", quiz: 15, exam: 50 }
-    ];
-
-    let students = JSON.parse(localStorage.getItem('ips_db')) || defaultStudents;
-    let adminInfo = JSON.parse(localStorage.getItem('ips_admin')) || { name: "محمد فرحان الغفري", role: "موجه" };
-    let isPublished = localStorage.getItem('ips_published') === 'true';
+    // إعدادات Firebase (سيتم ربطها بقاعدة بياناتك)
+    const firebaseConfig = { databaseURL: "https://ibn-khaldon-default-rtdb.firebaseio.com/" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
     function toggleAuth(isReg) {
         document.getElementById('login-box').style.display = isReg ? 'none' : 'block';
         document.getElementById('register-box').style.display = isReg ? 'block' : 'none';
     }
 
+    function getClassById(id) {
+        const n = parseInt(id);
+        if(n >= 202601 && n <= 202610) return { name: "الصف التاسع", class: "bg-9" };
+        if(n >= 202611 && n <= 202620) return { name: "الصف العاشر", class: "bg-10" };
+        if(n >= 202621 && n <= 202630) return { name: "الحادي عشر", class: "bg-11" };
+        return { name: "غير مصنف", class: "bg-9" };
+    }
+
     function handleRegister() {
+        const id = document.getElementById('reg-id').value;
+        const cls = getClassById(id);
         const s = {
-            name: document.getElementById('reg-name').value, id: document.getElementById('reg-id').value,
+            name: document.getElementById('reg-name').value, id: id,
             father: document.getElementById('reg-father').value, mother: document.getElementById('reg-mother').value,
             dob: document.getElementById('reg-dob').value, address: document.getElementById('reg-address').value,
             fPhone: document.getElementById('reg-fPhone').value, mPhone: document.getElementById('reg-mPhone').value,
-            grade: document.getElementById('reg-grade').value, section: document.getElementById('reg-section').value,
-            pass: document.getElementById('reg-pass').value, quiz: 0, exam: 0
+            section: document.getElementById('reg-section').value, pass: document.getElementById('reg-pass').value,
+            grade: cls.name, gradeClass: cls.class, quiz: 0, exam: 0
         };
-        if(!s.name || !s.id) return alert("الاسم والـ ID مطلوبان");
-        students.push(s);
-        localStorage.setItem('ips_db', JSON.stringify(students));
-        alert("تم التسجيل بنجاح!");
-        toggleAuth(false);
+        
+        if(!s.name || !s.id) return alert("أكمل البيانات");
+        
+        // حفظ في السحابة
+        db.ref('students/' + s.id).set(s).then(() => {
+            alert("تم التسجيل سحابياً! يمكنك الدخول الآن من أي جهاز.");
+            toggleAuth(false);
+        });
     }
 
     function handleLogin() {
         const u = document.getElementById('user-in').value;
         const p = document.getElementById('pass-in').value;
+
         if(u === "ibn khaldon" && p === "ITmohammedf0@") {
-            loadApp(adminInfo.name, "ADMIN", true);
+            loadApp("محمد فرحان الغفري", "ADMIN", true);
         } else {
-            const st = students.find(s => s.id === u && s.pass === p);
-            if(st) loadApp(st.name, st.id, false, st);
-            else alert("خطأ في البيانات");
+            db.ref('students/' + u).once('value').then((snap) => {
+                const st = snap.val();
+                if(st && st.pass === p) loadApp(st.name, st.id, false, st);
+                else alert("بيانات غير صحيحة");
+            });
         }
     }
 
     function loadApp(name, id, isAdmin, stData = null) {
         document.getElementById('auth-screen').style.display = 'none';
-        document.getElementById('main-app').style.display = 'block';
+        document.getElementById('main-app').style.display = 'flex';
         document.getElementById('side-name').innerText = name;
         document.getElementById('side-id').innerText = "ID: " + id;
+        
         if(isAdmin) {
             document.getElementById('admin-only-btn').style.display = 'block';
-            renderAdminView();
+            listenToStudents();
             showTab('admin');
         } else {
             renderProfile(stData);
@@ -154,61 +150,34 @@
         }
     }
 
-    function renderAdminView() {
-        const body = document.getElementById('admin-list-body');
-        body.innerHTML = students.map((s, i) => `
-            <tr>
-                <td>${s.name}</td><td>${s.id}</td>
-                <td><input type="number" value="${s.quiz}" onchange="updateScore(${i},'quiz',this.value)" style="width:45px"></td>
-                <td><input type="number" value="${s.exam}" onchange="updateScore(${i},'exam',this.value)" style="width:45px"></td>
-                <td><button onclick="deleteStudent(${i})" style="color:red; border:none; background:none; cursor:pointer;">حذف</button></td>
-            </tr>`).join('');
-    }
-
-    function updateScore(idx, field, val) {
-        students[idx][field] = parseInt(val) || 0;
-        localStorage.setItem('ips_db', JSON.stringify(students));
-    }
-
-    function deleteStudent(idx) {
-        if(confirm("هل تريد حذف هذا الطالب؟")) {
-            students.splice(idx, 1);
-            localStorage.setItem('ips_db', JSON.stringify(students));
-            renderAdminView();
-        }
-    }
-
-    function publishGrades() {
-        isPublished = true;
-        localStorage.setItem('ips_published', 'true');
-        alert("🚀 تم نشر العلامات لجميع الطلاب!");
+    function listenToStudents() {
+        db.ref('students').on('value', (snap) => {
+            const data = snap.val();
+            const lib = document.getElementById('students-library');
+            if(!data) { lib.innerHTML = "لا يوجد طلاب مسجلون بعد."; return; }
+            
+            lib.innerHTML = Object.values(data).map(s => `
+                <div class="student-box">
+                    <div>
+                        <b>${s.name}</b> <br>
+                        <small>ID: ${s.id} | هاتف: ${s.fPhone}</small>
+                    </div>
+                    <span class="badge ${s.gradeClass}">${s.grade}</span>
+                </div>
+            `).join('');
+        });
     }
 
     function renderProfile(st) {
         const info = document.getElementById('profile-info');
-        const fields = { father: "الأب", mother: "الأم", dob: "المواليد", address: "العنوان", fPhone: "هاتف الأب", mPhone: "هاتف الأم", grade: "الصف", section: "الشعبة" };
+        const fields = { father: "الأب", mother: "الأم", dob: "المواليد", address: "العنوان", grade: "الصف", section: "الشعبة" };
         info.innerHTML = "";
-        for(let k in fields) info.innerHTML += `<div style="background:#f8f9ff; padding:8px; border-radius:8px;"><small style="color:#888">${fields[k]}</small><br><b>${st[k] || '-'}</b></div>`;
-        
-        const gBody = document.getElementById('st-grades-body');
-        if(!isPublished) {
-            gBody.innerHTML = "<tr><td colspan='3'>العلامات قيد التدقيق حالياً</td></tr>";
-        } else {
-            gBody.innerHTML = `<tr><td>العلامة العامة</td><td>${st.quiz}</td><td>${st.exam}</td></tr>`;
-        }
+        for(let k in fields) info.innerHTML += `<div style="background:#f8f9ff; padding:10px; border-radius:10px;"><small>${fields[k]}</small><br><b>${st[k]}</b></div>`;
     }
 
     function showTab(t) {
         document.getElementById('tab-profile').style.display = t === 'profile' ? 'block' : 'none';
         document.getElementById('tab-admin').style.display = t === 'admin' ? 'block' : 'none';
-    }
-
-    function saveAdminInfo() {
-        adminInfo.name = document.getElementById('adm-name-edit').value;
-        adminInfo.role = document.getElementById('adm-role-edit').value;
-        localStorage.setItem('ips_admin', JSON.stringify(adminInfo));
-        document.getElementById('side-name').innerText = adminInfo.name;
-        alert("تم الحفظ");
     }
 </script>
 </body>
