@@ -8,92 +8,89 @@
         :root { --primary: #6c5ce7; --bg: #f4f7fe; --sidebar-w: 260px; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; }
         
-        /* شاشة الدخول والتسجيل */
+        /* شاشة الدخول */
         .auth-screen { position: fixed; inset: 0; background: white; z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .auth-card { width: 100%; max-width: 380px; text-align: center; background: white; padding: 30px; border-radius: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
-        .school-logo { width: 80px; height: 80px; margin-bottom: 10px; object-fit: contain; }
-        input, select { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; outline: none; }
-        .btn-main { background: var(--primary); color: white; border: none; padding: 14px; width: 100%; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 16px; }
+        .school-logo { width: 80px; height: 80px; margin-bottom: 10px; }
+        input, select { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; }
+        .btn-main { background: var(--primary); color: white; border: none; padding: 14px; width: 100%; border-radius: 12px; cursor: pointer; font-weight: bold; }
 
         /* الواجهة الداخلية */
         .app-container { display: none; min-height: 100vh; width: 100%; }
-        .sidebar { width: var(--sidebar-w); background: white; border-left: 1px solid #eee; padding: 20px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
-        .main-content { flex-grow: 1; padding: 20px; width: calc(100% - var(--sidebar-w)); box-sizing: border-box; }
+        .sidebar { width: var(--sidebar-w); background: white; border-left: 1px solid #eee; padding: 20px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
+        .main-content { flex-grow: 1; padding: 20px; box-sizing: border-box; }
 
         @media (max-width: 768px) {
             .app-container { flex-direction: column; }
             .sidebar { width: 100%; border-left: none; border-bottom: 1px solid #eee; }
-            .main-content { width: 100%; }
         }
 
         .card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 15px; }
-        .info-item { background: #f8f9ff; padding: 12px; border-radius: 12px; border: 1px solid #ecefff; }
-        .info-label { font-size: 11px; color: #888; display: block; }
-        .info-value { font-size: 14px; font-weight: 600; color: #333; }
+        .admin-panel { display: none; border: 2px solid #f39c12; background: #fffcf5; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px; }
     </style>
 </head>
 <body>
 
 <div id="auth-screen" class="auth-screen">
     <div id="login-box" class="auth-card">
-        <img src="https://cdn-icons-png.flaticon.com/512/5351/5351042.png" class="school-logo" alt="Logo">
+        <img src="https://cdn-icons-png.flaticon.com/512/5351/5351042.png" class="school-logo">
         <h2 style="color:var(--primary); margin:0;">IPS</h2>
-        <p style="font-size:14px; color:#666; margin-bottom:20px;">ثانوية ومعهد ابن خلدون الخاصة</p>
-        
-        <input type="text" id="user-in" placeholder="ID الطالب أو اسم المستخدم">
+        <input type="text" id="user-in" placeholder="ID الطالب أو اسم الموجه">
         <input type="password" id="pass-in" placeholder="كلمة المرور">
-        <button class="btn-main" onclick="handleLogin()">تسجيل الدخول</button>
-        
+        <button class="btn-main" onclick="handleLogin()">دخول</button>
         <p style="font-size: 13px; color: var(--primary); cursor: pointer; margin-top: 15px;" onclick="toggleAuth(true)">ألا تملك حساب؟ سجل الآن</p>
     </div>
 
     <div id="register-box" class="auth-card" style="display:none;">
-        <h3 style="color:var(--primary)">إنشاء حساب طالب جديد</h3>
+        <h3 style="color:var(--primary)">تسجيل طالب جديد</h3>
         <input type="text" id="reg-name" placeholder="الاسم الثلاثي">
-        <input type="text" id="reg-id" placeholder="الرقم الدراسي (ID)">
+        <input type="text" id="reg-id" placeholder="ID الطالب">
         <select id="reg-grade">
             <option value="تاسع">تاسع</option>
-            <option value="عاشر">عاشر</option>
-            <option value="حادي عشر">حادي عشر</option>
             <option value="ثالث ثانوي">ثالث ثانوي</option>
         </select>
         <input type="password" id="reg-pass" placeholder="كلمة المرور">
-        <button class="btn-main" onclick="handleRegister()">تأكيد الحساب</button>
-        <p style="font-size: 13px; color: var(--primary); cursor: pointer; margin-top: 15px;" onclick="toggleAuth(false)">لديك حساب بالفعل؟ سجل دخول</p>
+        <button class="btn-main" onclick="handleRegister()">إنشاء الحساب</button>
+        <p onclick="toggleAuth(false)" style="cursor:pointer; color:var(--primary); margin-top:10px;">رجوع للدخول</p>
     </div>
 </div>
 
 <div id="main-app" class="app-container">
     <div class="sidebar">
-        <img src="https://cdn-icons-png.flaticon.com/512/5351/5351042.png" style="width:60px; margin-bottom:15px;">
-        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" style="width:80px; border-radius:50%; border:3px solid var(--primary);">
-        <h3 id="side-name" style="margin:10px 0 0;">اسم الطالب</h3>
-        <p id="side-id" style="color:#888; font-size:12px;">ID: ---</p>
-        
-        <div style="width:100%; margin-top:20px;">
-            <div style="padding:12px; background:#f0edff; color:var(--primary); border-radius:10px; margin-bottom:8px; font-weight:bold;">👤 ملفاتي</div>
-            <div style="padding:12px; color:#666;">💳 المالية</div>
-            <div style="padding:12px; color:#666;">📎 الدرجات</div>
+        <img src="https://cdn-icons-png.flaticon.com/512/5351/5351042.png" style="width:50px; margin-bottom:10px;">
+        <div id="side-info" style="text-align:center;">
+            <h3 id="side-name">الموجه العام</h3>
+            <p id="side-id" style="color:#888; font-size:12px;">ID: ADMIN-001</p>
         </div>
-        <button onclick="location.reload()" style="margin-top:auto; width:100%; padding:10px; background:#ff7675; color:white; border:none; border-radius:10px; cursor:pointer;">خروج</button>
+        <div style="width:100%; margin-top:20px;">
+            <div style="padding:12px; background:#f0edff; color:var(--primary); border-radius:10px; margin-bottom:5px;">👤 ملفاتي</div>
+            <div id="admin-btn" style="display:none; padding:12px; color:#f39c12; cursor:pointer; font-weight:bold;" onclick="toggleAdmin()">🛠 لوحة الموجه</div>
+        </div>
+        <button onclick="location.reload()" style="margin-top:auto; width:100%; padding:10px; background:#ff7675; color:white; border:none; border-radius:10px;">خروج</button>
     </div>
 
     <div class="main-content">
+        <div id="admin-area" class="card admin-panel">
+            <h3>👥 قائمة الطلاب الجدد والمرصودين</h3>
+            <table id="admin-table">
+                <thead><tr><th>الطالب</th><th>ID</th><th>الصف</th><th>المذاكرة</th><th>الامتحان</th></tr></thead>
+                <tbody id="admin-list-body"></tbody>
+            </table>
+        </div>
         <div class="card">
-            <h3 style="color:var(--primary); margin:0;">👤 بيانات الطالب (ملفاتي)</h3>
-            <div class="info-grid" id="profile-details"></div>
+            <h3>📊 حالة الحساب</h3>
+            <p>أهلاً بك في نظام IPS التعليمي.</p>
         </div>
     </div>
 </div>
 
 <script>
-    // بيانات الموجه الثابتة
-    const ADMIN_USER = "ibn khaldon";
-    const ADMIN_PASS = "ITmohammedf0@";
-
-    // قاعدة بيانات محلية للطلاب المسجلين
-    let db = JSON.parse(localStorage.getItem('ips_students')) || {};
+    // هذه هي "القاعدة" التي تجمع الطلاب القدامى والجدد
+    let students = JSON.parse(localStorage.getItem('ips_db')) || [
+        { id: "202311632", name: "محمد خالد العلي", grade: "ثالث ثانوي", pass: "123", quiz: 18, exam: 55 }
+    ];
 
     function toggleAuth(isReg) {
         document.getElementById('login-box').style.display = isReg ? 'none' : 'block';
@@ -106,50 +103,55 @@
         const grade = document.getElementById('reg-grade').value;
         const pass = document.getElementById('reg-pass').value;
 
-        if(!name || !id || !pass) return alert("يرجى تعبئة كافة الخانات");
+        if(!name || !id || !pass) return alert("أكمل البيانات");
         
-        db[id] = { name, id, grade, pass, father: "قيد التحديث", mother: "قيد التحديث", address: "قيد التحديث", dob: "قيد التحديث", fPhone: "-", mPhone: "-", section: "غير محدد" };
-        localStorage.setItem('ips_students', JSON.stringify(db));
-        alert("تم إنشاء حسابك! يمكنك الدخول الآن.");
+        students.push({ name, id, grade, pass, quiz: 0, exam: 0 });
+        localStorage.setItem('ips_db', JSON.stringify(students));
+        alert("تم تسجيل الطالب بنجاح! سيظهر الآن في لوحة الموجه.");
         toggleAuth(false);
     }
 
     function handleLogin() {
-        const u = document.getElementById('user-in').value.trim();
-        const p = document.getElementById('pass-in').value.trim();
+        const u = document.getElementById('user-in').value;
+        const p = document.getElementById('pass-in').value;
 
-        // دخول الموجه
-        if(u === ADMIN_USER && p === ADMIN_PASS) {
-            alert("مرحباً بك أيها الموجه العام");
-            enterApp("الموجه العام", "إدارة", "ADMIN-001");
-            return;
-        }
-
-        // دخول الطالب
-        const st = db[u];
-        if(st && st.pass === p) {
-            enterApp(st.name, st.grade, st.id, st);
+        if(u === "ibn khaldon" && p === "ITmohammedf0@") {
+            showDashboard("الموجه العام", "ADMIN-001", true);
         } else {
-            alert("بيانات غير صحيحة. تأكد من الـ ID وكلمة المرور.");
+            const st = students.find(s => s.id === u && s.pass === p);
+            if(st) showDashboard(st.name, st.id, false);
+            else alert("بيانات خاطئة");
         }
     }
 
-    function enterApp(name, grade, id, fullData = null) {
+    function showDashboard(name, id, isAdmin) {
         document.getElementById('auth-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'flex';
         document.getElementById('side-name').innerText = name;
         document.getElementById('side-id').innerText = "ID: " + id;
-        
-        if(fullData) loadProfile(fullData);
+        if(isAdmin) {
+            document.getElementById('admin-btn').style.display = 'block';
+            renderAdminTable();
+        }
     }
 
-    function loadProfile(st) {
-        const container = document.getElementById('profile-details');
-        const labels = { name: "الاسم", father: "الأب", mother: "الأم", address: "العنوان", dob: "المواليد", fPhone: "هاتف الأب", mPhone: "هاتف الأم", grade: "الصف", section: "الشعبة", id: "ID الطالب" };
-        container.innerHTML = "";
-        for (let key in labels) {
-            container.innerHTML += `<div class="info-item"><span class="info-label">${labels[key]}</span><span class="info-value">${st[key] || '-'}</span></div>`;
-        }
+    function toggleAdmin() {
+        const area = document.getElementById('admin-area');
+        area.style.display = (area.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function renderAdminTable() {
+        const body = document.getElementById('admin-list-body');
+        body.innerHTML = "";
+        students.forEach(s => {
+            body.innerHTML += `<tr>
+                <td>${s.name}</td>
+                <td>${s.id}</td>
+                <td>${s.grade}</td>
+                <td><input type="number" value="${s.quiz}" style="width:40px"></td>
+                <td><input type="number" value="${s.exam}" style="width:40px"></td>
+            </tr>`;
+        });
     }
 </script>
 </body>
