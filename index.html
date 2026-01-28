@@ -3,99 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بوابة ابن خلدون الذكية</title>
+    <title>نظام ابن خلدون المطور 2026</title>
     <style>
-        :root { --blue: #007bff; --orange: #f39c12; --bg: #f4f7f6; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; }
-        #login-screen { display: flex; align-items: center; justify-content: center; height: 100vh; }
-        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 85%; max-width: 400px; text-align: center; }
-        .input-group { margin-bottom: 12px; text-align: right; }
-        .input-group label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
-        .input-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        #main-site { display: none; }
-        .app-bar { background: white; padding: 15px; text-align: center; border-bottom: 3px solid var(--blue); }
-        .container { padding: 15px; max-width: 600px; margin: auto; }
-        .info-card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .info-item { background: #f9f9f9; padding: 8px; border-radius: 8px; font-size: 11px; border: 1px solid #eee; }
-        .admin-panel { display: none; background: #e3f2fd; border: 2px dashed var(--blue); padding: 10px; border-radius: 12px; margin-bottom: 15px; }
-        .btn { width: 100%; padding: 12px; background: var(--blue); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
-        th, td { border: 1px solid #eee; padding: 8px; text-align: center; }
+        :root { --primary: #6c5ce7; --secondary: #f39c12; --success: #27ae60; --bg: #f8f9fa; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; overflow-x: hidden; }
+        
+        /* شاشات الدخول */
+        .auth-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        .auth-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-primary { background: var(--primary); color: white; }
+
+        /* الواجهة الرئيسية */
+        #main-app { display: none; }
+        .sidebar { background: white; width: 250px; height: 100vh; position: fixed; right: 0; top: 0; border-left: 1px solid #eee; padding: 20px; }
+        .content { margin-right: 250px; padding: 20px; }
+        .nav-item { padding: 12px; border-radius: 8px; cursor: pointer; margin-bottom: 5px; font-size: 14px; }
+        .nav-item:hover { background: #f0edff; }
+        .card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+
+        /* لوحة الموجه */
+        .admin-section { display: none; border: 2px solid var(--primary); padding: 15px; border-radius: 15px; margin-top: 20px; background: #f9f8ff; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
+        th, td { padding: 10px; border: 1px solid #eee; text-align: center; font-size: 13px; }
+        
+        @media (max-width: 768px) { .sidebar { display: none; } .content { margin-right: 0; } }
     </style>
 </head>
 <body>
 
-<div id="login-screen">
-    <div class="card">
-        <img src="logo.jpg" onerror="this.src='https://cdn-icons-png.flaticon.com/512/5351/5351486.png'" style="width:70px;">
-        <h4>تسجيل الدخول - ابن خلدون</h4>
-        <div class="input-group"><label>الاسم</label><input type="text" id="u"></div>
-        <div class="input-group"><label>الرقم الدراسي</label><input type="number" id="i"></div>
-        <div class="input-group"><label>كلمة السر</label><input type="password" id="p"></div>
-        <button class="btn" onclick="login()">دخول</button>
+<div id="auth-area" class="auth-container">
+    <div id="login-box" class="auth-card">
+        <img src="logo.jpg" style="width:70px; border-radius:50%;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/5351/5351486.png'">
+        <h2>مرحباً بك</h2>
+        <input type="text" id="user" placeholder="الاسم أو الرقم">
+        <input type="password" id="pass" placeholder="كلمة السر">
+        <button class="btn btn-primary" onclick="login()">دخول</button>
+        <p style="font-size: 12px; color: #888; cursor: pointer;" onclick="alert('يرجى مراجعة الإدارة لإنشاء حساب')">نسيت كلمة السر؟</p>
     </div>
 </div>
 
-<div id="main-site">
-    <div class="app-bar">
-        <img src="logo.jpg" style="width:60px; border-radius:50%;">
-        <div style="font-weight:bold; font-size:14px; margin-top:5px;">ثانوية ومعهد ابن خلدون الخاصة</div>
+<div id="main-app">
+    <div class="sidebar">
+        <h3 style="color: var(--primary);">ابن خلدون</h3>
+        <div class="nav-item">🏠 الصفحة الرئيسية</div>
+        <div class="nav-item">📄 كشف العلامات</div>
+        <div class="nav-item">💰 الرسوم المالية</div>
+        <div id="admin-btn" class="nav-item" style="display:none; color: red; font-weight: bold;" onclick="showAdmin()">🛠 لوحة الموجه</div>
+        <button class="btn" style="margin-top: 20px;" onclick="location.reload()">خروج</button>
     </div>
 
-    <div class="container">
-        <div id="admin-box" class="admin-panel">
-            <div style="font-weight:bold; color:var(--blue); margin-bottom:8px;">🛠 لوحة الموجه</div>
-            <textarea id="news-in" style="width:100%; border-radius:8px; border:1px solid #ccc; padding:5px; height: 60px;" placeholder="اكتب إعلاناً..."></textarea>
-            <button class="btn" style="background:#28a745; margin-top:5px;" onclick="addNews()">نشر الإعلان</button>
+    <div class="content">
+        <div class="card">
+            <h2 id="welcome-msg"></h2>
+            <p id="user-info" style="color: #666;"></p>
         </div>
 
-        <div class="info-card">
-            <div style="color:var(--blue); font-weight:bold; margin-bottom:10px;">👤 بيانات الطالب الشخصية</div>
-            <div class="info-grid">
-                <div class="info-item">الاسم: <b>محمد خالد العلي</b></div>
-                <div class="info-item">الأب: <b>خالد</b></div>
-                <div class="info-item">الأم: <b>فاطمة</b></div>
-                <div class="info-item">المواليد: <b>2008/01/01</b></div>
-                <div class="info-item">هاتف الأب: <b>0933xxxxxx</b></div>
-                <div class="info-item">هاتف الأم: <b>0944xxxxxx</b></div>
-                <div class="info-item">الصف: <b>ثالث ثانوي</b></div>
-                <div class="info-item">الشعبة: <b>الأولى</b></div>
-                <div class="info-item">العنوان: <b>حمص</b></div>
-                <div class="info-item">ID: <b>202311362</b></div>
-            </div>
+        <div class="card">
+            <h3 style="color: var(--secondary);">💰 الرسوم المالية</h3>
+            <table>
+                <tr><th>القسط الكلي</th><th>المسدد</th><th>المتبقي</th></tr>
+                <tr><td>1,500,000</td><td id="paid-val">800,000</td><td id="debt-val" style="color:red">700,000</td></tr>
+            </table>
         </div>
 
-        <div class="info-card">
-            <div style="color:var(--orange); font-weight:bold;">📢 الإعلانات الرسمية</div>
-            <div id="news-feed" style="font-size:13px; margin-top:10px; color:#666; text-align: center;">لا توجد إعلانات حالياً</div>
+        <div id="admin-panel" class="admin-section">
+            <h3>📝 رصد علامات الطلاب</h3>
+            <p style="font-size: 12px; color: #666;">بصفتك موجه، يمكنك تعديل بيانات أي طالب هنا:</p>
+            <table>
+                <tr><th>الطالب</th><th>المادة</th><th>المذاكرة</th><th>الامتحان</th><th>تعديل</th></tr>
+                <tr>
+                    <td>محمد العلي</td>
+                    <td><input type="text" value="رياضيات" id="m-sub" style="margin:0; padding:5px;"></td>
+                    <td><input type="number" value="18" id="m-quiz" style="margin:0; padding:5px;"></td>
+                    <td><input type="number" value="55" id="m-exam" style="margin:0; padding:5px;"></td>
+                    <td><button onclick="saveGrades()" style="background:var(--success); color:white; border:none; padding:5px; border-radius:5px;">حفظ</button></td>
+                </tr>
+            </table>
         </div>
 
-        <div class="info-card">
-            <div style="color:var(--blue); font-weight:bold;">📊 الدرجات والبرنامج الأسبوعي</div>
-            <table><tr><th>المادة</th><th>المذاكرة</th><th>الامتحان</th></tr><tr><td>الرياضيات</td><td>18/20</td><td>55/60</td></tr></table>
-            <table style="margin-top:10px;"><tr><th>الحصة</th><th>الأحد</th><th>الاثنين</th></tr><tr><td>الأولى</td><td>فيزياء</td><td>عربي</td></tr></table>
+        <div class="card">
+            <h3 style="color: var(--primary);">📊 كشف العلامات الدراسي</h3>
+            <table id="grade-table">
+                <tr><th>المادة</th><th>المذاكرة</th><th>الامتحان</th><th>المجموع</th></tr>
+                <tr><td id="view-sub">الرياضيات</td><td id="view-quiz">18</td><td id="view-exam">55</td><td id="view-total">73</td></tr>
+            </table>
         </div>
     </div>
 </div>
 
 <script>
     function login() {
-        let u = document.getElementById('u').value, i = document.getElementById('i').value, p = document.getElementById('p').value;
-        if(u==="ibn khaldon" && i==="202311362" && p==="ITmohammedf0@") {
-            document.getElementById('admin-box').style.display='block';
-            alert("مرحباً أيها الموجه! يمكنك النشر الآن.");
+        const u = document.getElementById('user').value;
+        const p = document.getElementById('pass').value;
+
+        if (u === "ibn khaldon" && p === "ITmohammedf0@") {
+            document.getElementById('admin-btn').style.display = 'block';
+            enterApp("الموجه العام", "إدارة النظام");
+        } else {
+            enterApp(u, "طالب - ثالث ثانوي");
         }
-        document.getElementById('login-screen').style.display='none';
-        document.getElementById('main-site').style.display='block';
     }
-    function addNews() {
-        let val = document.getElementById('news-in').value;
-        if(!val) return;
-        let feed = document.getElementById('news-feed');
-        if(feed.innerText.includes("لا توجد")) feed.innerHTML = "";
-        feed.innerHTML = `<div style="background:#fff3cd; padding:10px; border-radius:8px; margin-bottom:8px; border-right:5px solid var(--orange); text-align:right;">${val}</div>` + feed.innerHTML;
-        document.getElementById('news-in').value = "";
+
+    function enterApp(name, info) {
+        document.getElementById('auth-area').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+        document.getElementById('welcome-msg').innerText = "أهلاً بك، " + name;
+        document.getElementById('user-info').innerText = info;
+    }
+
+    function showAdmin() {
+        const panel = document.getElementById('admin-panel');
+        panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function saveGrades() {
+        // هذه الوظيفة تأخذ القيم من خانات الموجه وتضعها في جدول الطالب
+        const sub = document.getElementById('m-sub').value;
+        const quiz = document.getElementById('m-quiz').value;
+        const exam = document.getElementById('m-exam').value;
+        
+        document.getElementById('view-sub').innerText = sub;
+        document.getElementById('view-quiz').innerText = quiz;
+        document.getElementById('view-exam').innerText = exam;
+        document.getElementById('view-total').innerText = parseInt(quiz) + parseInt(exam);
+        
+        alert("تم رصد العلامات بنجاح وتحديث كشف الطالب!");
     }
 </script>
 </body>
