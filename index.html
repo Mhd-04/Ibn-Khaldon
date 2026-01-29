@@ -3,160 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام ابن خلدون المطور</title>
+    <title>نظام IPS - البطاقة المدرسية</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         :root { --primary: #8e44ad; --bg: #f4f7fe; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; text-align: center; }
-        .card { background: white; border-radius: 20px; padding: 25px; margin: 20px auto; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
-        .btn-purple { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
-        .profile-img { width: 90px; height: 90px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover; }
-        .student-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; }
-        .badge { padding: 5px 10px; border-radius: 5px; color: white; font-size: 12px; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        .card { width: 90%; max-width: 420px; background: white; padding: 25px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; }
+        input, button, select { width: 100%; padding: 12px; margin: 6px 0; border-radius: 12px; border: 1px solid #eee; box-sizing: border-box; }
+        .btn-main { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; }
+        .btn-print { background: #2ecc71; color: white; border: none; padding: 10px; border-radius: 10px; cursor: pointer; margin-top: 10px; }
+        
+        /* تصميم البطاقة المدرسية للطباعة */
+        #id-card-print { 
+            width: 350px; height: 220px; border: 2px solid var(--primary); border-radius: 15px; 
+            margin: 20px auto; display: none; background: white; position: relative; overflow: hidden; text-align: right;
+        }
+        .card-header { background: var(--primary); color: white; padding: 5px; text-align: center; font-size: 14px; font-weight: bold; }
+        .card-body { display: flex; padding: 10px; gap: 10px; }
+        .card-photo { width: 90px; height: 110px; border: 2px solid #eee; object-fit: cover; border-radius: 8px; }
+        .card-info { flex: 1; font-size: 13px; line-height: 1.6; }
+        
+        @media print {
+            body * { visibility: hidden; }
+            #id-card-print, #id-card-print * { visibility: visible; }
+            #id-card-print { position: absolute; left: 0; top: 0; display: block !important; }
+        }
     </style>
 </head>
 <body>
 
-<div id="auth-page">
-    <div class="card" id="login-box">
-        <img src="1000219663.jpg" style="width:120px;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/9131/9131529.png'">
-        <h2 style="color:var(--primary)">IPS</h2>
-        <input type="text" id="log-id" placeholder="أدخل الـ ID الخاص بك">
-        <input type="password" id="log-pass" placeholder="كلمة المرور">
-        <button class="btn-purple" onclick="handleLogin()">دخول</button>
-        <p style="cursor:pointer; color:var(--primary); font-size:14px;" onclick="showReg(true)">ألا تملك حساب؟ سجل الآن</p>
+<div id="auth-container" class="card">
+    <div id="login-form">
+        <img src="1000219663.jpg" style="width:100px;">
+        <h2>نظام IPS</h2>
+        <input type="text" id="l-id" placeholder="أدخل الـ ID">
+        <input type="password" id="l-pass" placeholder="كلمة المرور">
+        <button class="btn-main" onclick="doLogin()">دخول</button>
+        <p onclick="toggleReg(true)" style="cursor:pointer; color:var(--primary)">تسجيل جديد</p>
     </div>
 
-    <div class="card" id="reg-box" style="display:none;">
-        <h3>تسجيل حساب جديد</h3>
-        <input type="file" accept="image/*" onchange="previewImg(this)">
-        <img id="prev" class="profile-img" style="display:none; margin: 10px auto;">
+    <div id="reg-form" style="display:none;">
+        <input type="file" accept="image/*" onchange="readImg(this)">
+        <img id="p-prev" src="" style="width:80px; display:none; margin:auto; border-radius:50%">
         <input type="text" id="r-name" placeholder="الاسم الكامل">
-        <input type="number" id="r-id" placeholder="الـ ID الخاص بك">
+        <input type="number" id="r-id" placeholder="ID (يبدأ بـ 2026 أو 04)">
         <input type="password" id="r-pass" placeholder="كلمة المرور">
-        <select id="r-type" style="width:100%; padding:10px; margin:5px 0; border-radius:10px;">
-            <option value="student">طالب</option>
-            <option value="admin">موجه / مشرف</option>
-        </select>
-        <button class="btn-purple" onclick="handleRegister()">حفظ الحساب سحابياً</button>
-        <button onclick="showReg(false)">رجوع</button>
+        <button class="btn-main" onclick="doRegister()">حفظ الحساب</button>
+        <button onclick="toggleReg(false)">رجوع</button>
     </div>
 </div>
 
-<div id="app-page" style="display:none;">
-    <div class="card">
-        <img id="u-img" class="profile-img" src="">
-        <h2 id="u-name">---</h2>
-        <p id="u-role" style="color:#666">---</p>
-    </div>
-
-    <div id="admin-view" class="card" style="display:none;">
-        <h3>📚 مكتبة الطلاب المصنفة</h3>
-        <div id="st-list">جاري جلب البيانات...</div>
-    </div>
-
-    <div id="student-view" class="card" style="display:none;">
-        <h3>📝 قسم الاختبارات والذكاء الاصطناعي</h3>
-        <p>مرحباً بك في صفحتك الدراسية.</p>
-    </div>
+<div id="app-page" class="card" style="display:none;">
+    <img id="u-img" src="" style="width:80px; border-radius:50%">
+    <h3 id="u-name">---</h3>
+    <p id="u-role">---</p>
     
-    <button class="card" style="width:auto; padding:10px 40px;" onclick="location.reload()">تسجيل خروج</button>
+    <button class="btn-print" onclick="printIDCard()">🖨️ طباعة البطاقة المدرسية</button>
+
+    <div id="admin-only" style="display:none; margin-top:20px; border-top:1px solid #eee; padding-top:10px;">
+        <h4>لوحة الموجه</h4>
+        <button class="btn-main" style="background:#34495e" onclick="window.print()">📋 طباعة كشف الطلاب</button>
+        <div id="st-list" style="margin-top:10px; text-align:right;"></div>
+    </div>
+</div>
+
+<div id="id-card-print">
+    <div class="card-header">ثانوية ابن خلدون الخاصة - بطاقة مدرسية</div>
+    <div class="card-body">
+        <img id="c-img" class="card-photo" src="">
+        <div class="card-info">
+            <b>الاسم:</b> <span id="c-name"></span><br>
+            <b>الـ ID:</b> <span id="c-id"></span><br>
+            <b>الصفة:</b> <span id="c-role"></span><br>
+            <div style="margin-top:10px; font-size:10px; color:var(--primary)">نظام IPS المطور © 2026</div>
+        </div>
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=50x50&data=IbnKhaldon" style="width:50px; height:50px; align-self:flex-end;">
+    </div>
 </div>
 
 <script>
-    const firebaseConfig = { databaseURL: "https://ips-khaldon-default-rtdb.firebaseio.com/" };
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const conf = { databaseURL: "https://ips-khaldon-default-rtdb.firebaseio.com/" };
+    if (!firebase.apps.length) firebase.initializeApp(conf);
     const db = firebase.database();
+    let pic = "";
 
-    let userImg = "";
-
-    function previewImg(input) {
-        const reader = new FileReader();
-        reader.onload = e => { 
-            userImg = e.target.result; 
-            document.getElementById('prev').src = userImg;
-            document.getElementById('prev').style.display = 'block';
-        };
-        reader.readAsDataURL(input.files[0]);
+    function readImg(i) {
+        const r = new FileReader();
+        r.onload = e => { pic = e.target.result; document.getElementById('p-prev').src = pic; document.getElementById('p-prev').style.display='block'; };
+        r.readAsDataURL(i.files[0]);
     }
 
-    function showReg(s) {
-        document.getElementById('login-box').style.display = s ? 'none' : 'block';
-        document.getElementById('reg-box').style.display = s ? 'block' : 'none';
-    }
+    function toggleReg(s) { document.getElementById('login-form').style.display=s?'none':'block'; document.getElementById('reg-form').style.display=s?'block':'none'; }
 
-    function handleRegister() {
+    function doRegister() {
         const id = document.getElementById('r-id').value;
-        const type = document.getElementById('r-type').value;
-        const data = {
-            name: document.getElementById('r-name').value,
-            id: id,
-            pass: document.getElementById('r-pass').value,
-            type: type,
-            photo: userImg || 'https://cdn-icons-png.flaticon.com/512/9131/9131529.png',
-            grade: (id >= 202601 && id <= 202610) ? "تاسع" : (id <= 202620) ? "عاشر" : "حادي عشر"
-        };
-
-        if(!id || !data.pass) return alert("أكمل البيانات");
-
-        db.ref('users/' + id).set(data).then(() => {
-            alert("تم الحفظ! يمكنك الآن الدخول بـ ID: " + id);
-            location.reload();
-        });
+        const role = id.startsWith("04") ? "موجه إداري" : (id<=202610?"تاسع":id<=202620?"عاشر":"حادي عشر");
+        const data = { name: document.getElementById('r-name').value, id: id, pass: document.getElementById('r-pass').value, photo: pic, role: role, type: id.startsWith("04")?'admin':'student' };
+        db.ref('users/'+id).set(data).then(() => location.reload());
     }
 
-    function handleLogin() {
-        const id = document.getElementById('log-id').value;
-        const ps = document.getElementById('log-pass').value;
-
-        // الدخول العام
-        db.ref('users/' + id).once('value').then(snap => {
+    function doLogin() {
+        const id = document.getElementById('l-id').value;
+        const ps = document.getElementById('l-pass').value;
+        db.ref('users/'+id).once('value').then(snap => {
             const u = snap.val();
-            if (u && u.pass === ps) {
-                launchApp(u);
-            } else if (id === "ibn khaldon" && ps === "ITmohammedf0@") {
-                // دخول الطوارئ للموجه
-                launchApp({name: "الموجه العام", type: "admin", photo: ""});
-            } else {
-                alert("عذراً، الـ ID أو كلمة المرور غير صحيحة");
-            }
+            if(u && u.pass === ps) launch(u); else alert("خطأ!");
         });
     }
 
-    function launchApp(u) {
-        document.getElementById('auth-page').style.display = 'none';
-        document.getElementById('app-page').style.display = 'block';
+    function launch(u) {
+        document.getElementById('auth-container').style.display='none';
+        document.getElementById('app-page').style.display='block';
         document.getElementById('u-name').innerText = u.name;
-        document.getElementById('u-img').src = u.photo || 'https://cdn-icons-png.flaticon.com/512/9131/9131529.png';
-        document.getElementById('u-role').innerText = (u.type === 'admin') ? "موجه / مشرف" : "طالب - " + u.grade;
+        document.getElementById('u-img').src = u.photo;
+        document.getElementById('u-role').innerText = u.role;
 
-        if (u.type === 'admin') {
-            document.getElementById('admin-view').style.display = 'block';
-            loadStudents();
-        } else {
-            document.getElementById('student-view').style.display = 'block';
+        // تعبئة بيانات البطاقة للطباعة
+        document.getElementById('c-name').innerText = u.name;
+        document.getElementById('c-id').innerText = u.id;
+        document.getElementById('c-role').innerText = u.role;
+        document.getElementById('c-img').src = u.photo;
+
+        if(u.type === 'admin') {
+            document.getElementById('admin-only').style.display='block';
+            db.ref('users').on('value', s => {
+                let h = "";
+                for(let k in s.val()) if(s.val()[k].type==='student') h += `<div>• ${s.val()[k].name} (${s.val()[k].role})</div>`;
+                document.getElementById('st-list').innerHTML = h;
+            });
         }
     }
 
-    function loadStudents() {
-        db.ref('users').on('value', snap => {
-            const users = snap.val();
-            let html = "";
-            for (let id in users) {
-                if (users[id].type === 'student') {
-                    html += `<div class="student-item">
-                        <img src="${users[id].photo}" style="width:40px;height:40px;border-radius:50%">
-                        <div style="flex:1; margin-right:10px; text-align:right;">
-                            <b>${users[id].name}</b><br><small>ID: ${id}</small>
-                        </div>
-                        <span class="badge" style="background:${users[id].grade=='تاسع'?'#3498db':users[id].grade=='عاشر'?'#2ecc71':'#e67e22'}">${users[id].grade}</span>
-                    </div>`;
-                }
-            }
-            document.getElementById('st-list').innerHTML = html || "لا يوجد طلاب مسجلون بعد.";
-        });
+    function printIDCard() {
+        window.print();
     }
 </script>
 </body>
