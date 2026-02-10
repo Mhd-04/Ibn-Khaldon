@@ -2,150 +2,168 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IPS - بوابة المشرف والطلاب</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <style>
-        :root { --primary: #8e44ad; --bg: #f4f7fe; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { width: 90%; max-width: 400px; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
-        input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
-        .btn-p { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
-        .preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin: 10px auto; border: 2px solid var(--primary); display: none; }
-        
-        /* البطاقة المدرسية */
-        #id-card { width: 320px; height: 190px; border: 2px solid var(--primary); border-radius: 12px; margin: 20px auto; display: none; background: white; text-align: right; }
-        .c-head { background: var(--primary); color: white; padding: 5px; text-align: center; font-size: 12px; }
-        .c-body { display: flex; padding: 10px; gap: 10px; }
-        
-        @media print { body * { visibility: hidden; } #id-card, #id-card * { visibility: visible; } #id-card { position: absolute; left: 0; top: 0; display: block !important; } }
-    </style>
+    <title>ثانوية ابن خلدون الخاصة</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
-
-<div class="card" id="box">
-    <div id="login-view">
-        <img src="1000219663.jpg" style="width:100px;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/9131/9131529.png'">
-        <h2>IPS</h2>
-        <input type="text" id="l-id" placeholder="الـ ID">
-        <input type="password" id="l-pass" placeholder="كلمة المرور">
-        <button class="btn-p" onclick="doLogin()">دخول</button>
-        <p onclick="view('reg')" style="color:var(--primary); cursor:pointer;">تسجيل جديد</p>
-    </div>
-
-    <div id="reg-view" style="display:none;">
-        <h3>تسجيل في IPS</h3>
-        <input type="file" accept="image/*" onchange="upImg(this)">
-        <img id="img-p" class="preview">
-        <input type="text" id="r-name" placeholder="الاسم الكامل">
-        <input type="number" id="r-id" placeholder="ID (04... للمشرف)">
-        <input type="password" id="r-pass" placeholder="كلمة المرور">
-        <button class="btn-p" id="save-btn" onclick="doSave()">حفظ وتفعيل الحساب</button>
-        <button onclick="view('login')" style="border:none; background:none; color:gray;">رجوع</button>
-    </div>
-
-    <div id="profile-view" style="display:none;">
-        <img id="u-img" class="preview" style="display:block;">
-        <h3 id="u-name">---</h3>
-        <p id="u-role">---</p>
-        <button class="btn-p" style="background:#2ecc71" onclick="window.print()">🖨️ طباعة البطاقة</button>
-        <div id="admin-list" style="display:none; text-align:right; font-size:12px; border-top:1px solid #eee; margin-top:10px;"></div>
-        <button onclick="location.reload()" style="margin-top:10px;">خروج</button>
-    </div>
-</div>
-
-<div id="id-card">
-    <div class="c-head">IPS - ثانوية ابن خلدون</div>
-    <div class="c-body">
-        <img id="c-img" src="" style="width:80px; height:100px; border-radius:5px; object-fit:cover;">
-        <div style="font-size:11px;">
-            <b>الاسم:</b> <span id="c-name"></span><br>
-            <b>الـ ID:</b> <span id="c-id"></span><br>
-            <b>الصفة:</b> <span id="c-role"></span><br>
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=40x40&data=IPS" style="margin-top:10px; width:40px;">
+    <nav class="no-print">
+        <div class="logo">School Nexus</div>
+        <div class="nav-links">
+            <a href="https://Mhd-04.github.io/IPS/" target="_blank" class="ips-btn">بوابة IPS</a>
         </div>
-    </div>
-</div>
+    </nav>
 
-<script>
-    const firebaseConfig = { databaseURL: "https://ips-khaldon-default-rtdb.firebaseio.com/" };
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    let imgData = "";
+    <main class="no-print">
+        <section class="form-container">
+            <h2>تسجيل طالب جديد (ابن خلدون)</h2>
+            <form id="studentForm">
+                <div class="input-group">
+                    <select id="school" required>
+                        <option value="ثانوية البنات (العنابي)">ثانوية البنات (العنابي)</option>
+                        <option value="ثانوية البنين (الرمادي)">ثانوية البنين (الرمادي)</option>
+                    </select>
+                    <select id="class" required>
+                        <option value="" disabled selected>اختر الصف...</option>
+                        <option value="السابع">السابع</option>
+                        <option value="الثامن">الثامن</option>
+                        <option value="التاسع">التاسع</option>
+                        <option value="الأول الثانوي">الأول الثانوي</option>
+                        <option value="الثاني الثانوي">الثاني الثانوي</option>
+                        <option value="الثالث الثانوي">الثالث الثانوي</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="studentName" placeholder="اسم الطالب الكامل" required>
+                    <input type="number" id="studentID" placeholder="رقم ID" required>
+                </div>
+                <button type="submit">حفظ البيانات</button>
+            </form>
+        </section>
 
-    function upImg(i) {
-        const r = new FileReader();
-        r.onload = e => { imgData = e.target.result; document.getElementById('img-p').src = imgData; document.getElementById('img-p').style.display = 'block'; };
-        r.readAsDataURL(i.files[0]);
-    }
+        <section class="excel-section">
+            <div class="excel-box">
+                <h3>رفع علامات الطلاب (Excel)</h3>
+                <input type="file" id="gradesExcel" accept=".xlsx, .xls">
+            </div>
+            <div class="excel-box">
+                <h3>رفع سجل الرواتب (Excel)</h3>
+                <input type="file" id="salaryExcel" accept=".xlsx, .xls">
+            </div>
+        </section>
 
-    function view(v) {
-        document.getElementById('login-view').style.display = v==='login'?'block':'none';
-        document.getElementById('reg-view').style.display = v==='reg'?'block':'none';
-    }
+        <section class="list-container">
+            <h2>إدارة المستندات</h2>
+            <div id="studentsList"></div>
+        </section>
+    </main>
 
-    function doSave() {
-        const id = document.getElementById('r-id').value;
-        const name = document.getElementById('r-name').value;
-        const pass = document.getElementById('r-pass').value;
-        const btn = document.getElementById('save-btn');
+    <div id="printArea" class="print-only"></div>
 
-        if(!id || !pass) return alert("أكمل البيانات");
-        btn.innerText = "جاري الحفظ فوري...";
-
-        const role = id.startsWith("04") ? "مشرف إداري" : (id <= 202610 ? "طالب - تاسع" : "طالب - ثانوي");
-        const data = { name, id, pass, photo: imgData, role, type: id.startsWith("04")?'admin':'student' };
-
-        // حفظ احتياطي محلي أولاً لضمان الدخول الفوري [cite: 2026-01-28]
-        localStorage.setItem('user_' + id, JSON.stringify(data));
-
-        db.ref('users/' + id).set(data).then(() => {
-            alert("تم الحفظ بنجاح!");
-            location.reload();
-        }).catch(() => {
-            alert("تم الحفظ محلياً (ضعف إنترنت). يمكنك الدخول الآن.");
-            location.reload();
-        });
-    }
-
-    function doLogin() {
-        const id = document.getElementById('l-id').value;
-        const ps = document.getElementById('l-pass').value;
-
-        // فحص محلي أولاً للسرعة
-        const local = localStorage.getItem('user_' + id);
-        if(local) {
-            const u = JSON.parse(local);
-            if(u.pass === ps) return start(u);
-        }
-
-        db.ref('users/' + id).once('value').then(s => {
-            const u = s.val();
-            if(u && u.pass === ps) start(u); else alert("بيانات خاطئة");
-        });
-    }
-
-    function start(u) {
-        document.getElementById('login-view').style.display = 'none';
-        document.getElementById('profile-view').style.display = 'block';
-        document.getElementById('u-name').innerText = u.name;
-        document.getElementById('u-img').src = u.photo;
-        document.getElementById('u-role').innerText = u.role;
-        document.getElementById('c-name').innerText = u.name;
-        document.getElementById('c-id').innerText = u.id;
-        document.getElementById('c-role').innerText = u.role;
-        document.getElementById('c-img').src = u.photo;
-
-        if(u.type === 'admin') {
-            document.getElementById('admin-list').style.display = 'block';
-            db.ref('users').on('value', snap => {
-                let h = "<b>الطلاب:</b><br>";
-                for(let k in snap.val()) if(snap.val()[k].type === 'student') h += `• ${snap.val()[k].name}<br>`;
-                document.getElementById('admin-list').innerHTML = h;
-            });
-        }
-    }
-</script>
+    <script src="script.js"></script>
 </body>
 </html>
+
+/* تنسيقات الطباعة */
+@media print {
+    .no-print { display: none !important; }
+    .print-only { display: block !important; }
+    .card { border: 2px solid #000; padding: 20px; width: 350px; height: 200px; margin: auto; }
+    .report { border: 1px solid #000; padding: 30px; width: 100%; }
+}
+
+.print-only { display: none; }
+
+.excel-section {
+    display: flex;
+    gap: 20px;
+    max-width: 900px;
+    margin: 20px auto;
+}
+
+.excel-box {
+    flex: 1;
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px dashed #27ae60;
+    text-align: center;
+}
+
+.action-btn {
+    padding: 5px 10px;
+    margin: 2px;
+    cursor: pointer;
+    border: none;
+    border-radius: 3px;
+}
+
+.btn-card { background: #3498db; color: white; }
+.btn-report { background: #f39c12; color: white; }
+// دالة عرض الطلاب مع أزرار الطباعة
+function displayStudents() {
+    const list = document.getElementById('studentsList');
+    let students = JSON.parse(localStorage.getItem('nexus_students')) || [];
+    
+    list.innerHTML = students.map((s, index) => `
+        <div class="student-item">
+            <span>${s.name} (${s.class})</span>
+            <button class="action-btn btn-card" onclick="printCard(${index})">طباعة بطاقة</button>
+            <button class="action-btn btn-report" onclick="printReport(${index})">طباعة جلاء</button>
+        </div>
+    `).join('');
+}
+
+// وظيفة طباعة بطاقة الطالب
+function printCard(index) {
+    let s = JSON.parse(localStorage.getItem('nexus_students'))[index];
+    const area = document.getElementById('printArea');
+    area.innerHTML = `
+        <div class="card">
+            <h3>هوية طالب - ${s.school}</h3>
+            <p>الاسم: ${s.name}</p>
+            <p>الرقم الدراسي: ${s.id}</p>
+            <p>الصف: ${s.class}</p>
+        </div>
+    `;
+    window.print();
+}
+
+// وظيفة طباعة الجلاء (نموذج مبسط)
+function printReport(index) {
+    let s = JSON.parse(localStorage.getItem('nexus_students'))[index];
+    const area = document.getElementById('printArea');
+    area.innerHTML = `
+        <div class="report">
+            <h1> مديرية التربية بحمص  - ثانوية ابن خلدون الخاصة - الجلاء المدرسي</h1>
+            <hr>
+            <p>اسم الطالب: ${s.name} &nbsp;&nbsp;&nbsp; الصف: ${s.class}</p>
+            <table border="1" width="100%" style="text-align:center;">
+                <tr><th>المادة</th><th>العلامة</th></tr>
+                <tr><td>اللغة العربية</td><td>-</td></tr>
+                <tr><td>الرياضيات</td><td>-</td></tr>
+<tr><td>اللغة الانكليزية</td><td>-</td></tr>
+<tr><td>اللغة الفرنسية</td><td>-</td></tr>
+<tr><td>علم الأحياء </td><td>-</td></tr>
+<tr><td>الفيزياء</td><td>-</td></tr>
+<tr><td>الكيمياء</td><td>-</td></tr>
+<tr><td>التربية الدينية</td><td>-</td></tr>
+            </table>
+            <p style="margin-top:50px;">توقيع المدير: ....................</p>
+        </div>
+    `;
+    window.print();
+}
+
+// معالجة ملفات الاكسل (مثال لعلامات الطلاب)
+document.getElementById('gradesExcel').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, {type: 'array'});
+        alert('تم رفع ملف العلامات بنجاح وجاري معالجته...');
+        console.log(workbook);
+    };
+    reader.readAsArrayBuffer(file);
+});
