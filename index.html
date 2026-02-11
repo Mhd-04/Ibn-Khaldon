@@ -10,9 +10,10 @@
             --wpu-bg: #f8f9fa;
             --wpu-green: #d4edda;
             --wpu-text: #555;
+            --wpu-gold: #ffc107;
         }
         body {
-            font-family: sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--wpu-bg);
             margin: 0;
             padding: 10px;
@@ -20,18 +21,47 @@
         .card {
             background: white;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
             max-width: 500px;
             margin: 10px auto;
             overflow: hidden;
         }
-        /* الرأسية العلويّة */
+        /* التعديل الجديد في الرأس */
+        .header-info {
+            background-color: #fff;
+            padding: 15px;
+            border-bottom: 2px solid var(--wpu-purple);
+            text-align: center;
+        }
+        .faculty-name {
+            font-weight: bold;
+            color: var(--wpu-purple);
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+        .student-main-info {
+            font-size: 15px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .congrats-badge {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            font-weight: bold;
+            font-size: 13px;
+            border: 1px solid #ffeeba;
+        }
+
         .top-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 10px 15px;
             border-bottom: 1px solid #eee;
+            background: #fafafa;
         }
         .user-section {
             display: flex;
@@ -41,32 +71,32 @@
             color: #666;
         }
         .user-img {
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
-            border: 1px solid #ddd;
+            border: 2px solid var(--wpu-purple);
         }
-        /* ترويسة الجدول */
         .semester-title {
             padding: 15px;
-            font-size: 18px;
+            font-size: 17px;
             font-weight: bold;
-            color: #333;
-            border-bottom: 1px solid #eee;
+            color: #444;
+            background: #fdfdfd;
         }
         table {
             width: 100%;
             border-collapse: collapse;
         }
         th {
-            color: #888;
-            font-weight: normal;
-            font-size: 13px;
-            padding: 10px;
+            color: #666;
+            font-weight: bold;
+            font-size: 12px;
+            padding: 12px 10px;
             border-bottom: 2px solid var(--wpu-purple);
+            background: #f9f9f9;
         }
         td {
-            padding: 15px 10px;
+            padding: 12px 10px;
             font-size: 14px;
             color: var(--wpu-text);
             border-bottom: 1px solid #f1f1f1;
@@ -75,28 +105,38 @@
         .subject-name {
             text-align: right;
             width: 40%;
-            line-height: 1.4;
+            font-weight: 500;
         }
-        /* قسم المعدل */
         .gpa-section {
             background-color: var(--wpu-green);
             padding: 15px;
             font-size: 14px;
             color: #155724;
-            margin: 10px;
-            border-radius: 4px;
+            margin: 15px;
+            border-radius: 8px;
+            border-right: 5px solid #28a745;
         }
     </style>
 </head>
 <body>
 
 <div class="card">
+    <div class="header-info">
+        <div class="faculty-name">كلية الهندسة - قسم الهندسة المعلوماتية</div>
+        <div class="student-main-info">
+            <strong>الطالب:</strong> محمد فرحان الغفري | <strong>السنة:</strong> الثالثة
+        </div>
+        <div class="congrats-badge">
+            🏆 المرتبة السادسة - تهانينا!
+        </div>
+    </div>
+
     <div class="top-header">
         <div class="user-section">
-            <img src="https://via.placeholder.com/40" class="user-img" alt="user">
-            <span>202311362</span>
+            <img src="https://via.placeholder.com/45" class="user-img" alt="user">
+            <span>الرقم الجامعي: 202311362</span>
         </div>
-        <div style="font-size: 20px;">☰</div>
+        <div style="font-size: 20px; color: var(--wpu-purple); cursor: pointer;">☰</div>
     </div>
 
     <div class="semester-title">الفصل الأول 2025/2026</div>
@@ -105,8 +145,8 @@
         <thead>
             <tr>
                 <th class="subject-name">اسم المقرر</th>
-                <th>رمز المقرر</th>
-                <th>الساعات</th>
+                <th>الرمز</th>
+                <th>ساعات</th>
                 <th>العلامة</th>
             </tr>
         </thead>
@@ -121,7 +161,7 @@
                 <td class="subject-name">بنيان الحواسيب (5)</td>
                 <td>ECT214</td>
                 <td>3</td>
-                <td>88</td>
+                <td>77</td>
             </tr>
             <tr>
                 <td class="subject-name">قواعد المعطيات المتقدمة</td>
@@ -133,7 +173,7 @@
                 <td class="subject-name">أساسيات الشبكات الحاسوبية (1)</td>
                 <td>EIT313</td>
                 <td>3</td>
-                <td>70</td>
+                <td>78</td>
             </tr>
             <tr>
                 <td class="subject-name">لغات البرمجة (1)</td>
@@ -145,14 +185,14 @@
                 <td class="subject-name">مبادئ الذكاء الصنعي</td>
                 <td>EIT311</td>
                 <td>3</td>
-                <td>99</td>
+                <td>91</td>
             </tr>
         </tbody>
     </table>
 
     <div class="gpa-section">
-        المعدل الفصلي: 71.60 ( 2.86 ) <br>
-        <small>لا يوجد إنذار - الحالة: ناجح</small>
+        <strong>المعدل الفصلي:</strong> 81.60 ( 2.86 ) <br>
+        <small>الحالة الأكاديمية: ناجح - لا يوجد إنذار</small>
     </div>
 </div>
 
