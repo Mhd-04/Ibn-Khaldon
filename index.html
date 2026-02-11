@@ -2,168 +2,159 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>ثانوية ابن خلدون الخاصة</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة الطالب - كشف العلامات</title>
+    <style>
+        :root {
+            --wpu-purple: #7b68ee;
+            --wpu-bg: #f8f9fa;
+            --wpu-green: #d4edda;
+            --wpu-text: #555;
+        }
+        body {
+            font-family: sans-serif;
+            background-color: var(--wpu-bg);
+            margin: 0;
+            padding: 10px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            max-width: 500px;
+            margin: 10px auto;
+            overflow: hidden;
+        }
+        /* الرأسية العلويّة */
+        .top-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+        .user-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid #ddd;
+        }
+        /* ترويسة الجدول */
+        .semester-title {
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            border-bottom: 1px solid #eee;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            color: #888;
+            font-weight: normal;
+            font-size: 13px;
+            padding: 10px;
+            border-bottom: 2px solid var(--wpu-purple);
+        }
+        td {
+            padding: 15px 10px;
+            font-size: 14px;
+            color: var(--wpu-text);
+            border-bottom: 1px solid #f1f1f1;
+            text-align: center;
+        }
+        .subject-name {
+            text-align: right;
+            width: 40%;
+            line-height: 1.4;
+        }
+        /* قسم المعدل */
+        .gpa-section {
+            background-color: var(--wpu-green);
+            padding: 15px;
+            font-size: 14px;
+            color: #155724;
+            margin: 10px;
+            border-radius: 4px;
+        }
+    </style>
 </head>
 <body>
-    <nav class="no-print">
-        <div class="logo">School Nexus</div>
-        <div class="nav-links">
-            <a href="https://Mhd-04.github.io/IPS/" target="_blank" class="ips-btn">بوابة IPS</a>
+
+<div class="card">
+    <div class="top-header">
+        <div class="user-section">
+            <img src="https://via.placeholder.com/40" class="user-img" alt="user">
+            <span>202311362</span>
         </div>
-    </nav>
+        <div style="font-size: 20px;">☰</div>
+    </div>
 
-    <main class="no-print">
-        <section class="form-container">
-            <h2>تسجيل طالب جديد (ابن خلدون)</h2>
-            <form id="studentForm">
-                <div class="input-group">
-                    <select id="school" required>
-                        <option value="ثانوية البنات (العنابي)">ثانوية البنات (العنابي)</option>
-                        <option value="ثانوية البنين (الرمادي)">ثانوية البنين (الرمادي)</option>
-                    </select>
-                    <select id="class" required>
-                        <option value="" disabled selected>اختر الصف...</option>
-                        <option value="السابع">السابع</option>
-                        <option value="الثامن">الثامن</option>
-                        <option value="التاسع">التاسع</option>
-                        <option value="الأول الثانوي">الأول الثانوي</option>
-                        <option value="الثاني الثانوي">الثاني الثانوي</option>
-                        <option value="الثالث الثانوي">الثالث الثانوي</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <input type="text" id="studentName" placeholder="اسم الطالب الكامل" required>
-                    <input type="number" id="studentID" placeholder="رقم ID" required>
-                </div>
-                <button type="submit">حفظ البيانات</button>
-            </form>
-        </section>
+    <div class="semester-title">الفصل الأول 2025/2026</div>
 
-        <section class="excel-section">
-            <div class="excel-box">
-                <h3>رفع علامات الطلاب (Excel)</h3>
-                <input type="file" id="gradesExcel" accept=".xlsx, .xls">
-            </div>
-            <div class="excel-box">
-                <h3>رفع سجل الرواتب (Excel)</h3>
-                <input type="file" id="salaryExcel" accept=".xlsx, .xls">
-            </div>
-        </section>
+    <table>
+        <thead>
+            <tr>
+                <th class="subject-name">اسم المقرر</th>
+                <th>رمز المقرر</th>
+                <th>الساعات</th>
+                <th>العلامة</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="subject-name">الفيزياء (5)</td>
+                <td>EIT101</td>
+                <td>3</td>
+                <td>91</td>
+            </tr>
+            <tr>
+                <td class="subject-name">بنيان الحواسيب (5)</td>
+                <td>ECT214</td>
+                <td>3</td>
+                <td>70</td>
+            </tr>
+            <tr>
+                <td class="subject-name">قواعد المعطيات المتقدمة</td>
+                <td>EIT312</td>
+                <td>3</td>
+                <td>70</td>
+            </tr>
+            <tr>
+                <td class="subject-name">أساسيات الشبكات الحاسوبية (1)</td>
+                <td>EIT313</td>
+                <td>3</td>
+                <td>70</td>
+            </tr>
+            <tr>
+                <td class="subject-name">لغات البرمجة (1)</td>
+                <td>EIT210</td>
+                <td>3</td>
+                <td>70</td>
+            </tr>
+            <tr>
+                <td class="subject-name">مبادئ الذكاء الصنعي</td>
+                <td>EIT311</td>
+                <td>3</td>
+                <td>59</td>
+            </tr>
+        </tbody>
+    </table>
 
-        <section class="list-container">
-            <h2>إدارة المستندات</h2>
-            <div id="studentsList"></div>
-        </section>
-    </main>
+    <div class="gpa-section">
+        المعدل الفصلي: 71.60 ( 2.86 ) <br>
+        <small>لا يوجد إنذار - الحالة: ناجح</small>
+    </div>
+</div>
 
-    <div id="printArea" class="print-only"></div>
-
-    <script src="script.js"></script>
 </body>
 </html>
-
-/* تنسيقات الطباعة */
-@media print {
-    .no-print { display: none !important; }
-    .print-only { display: block !important; }
-    .card { border: 2px solid #000; padding: 20px; width: 350px; height: 200px; margin: auto; }
-    .report { border: 1px solid #000; padding: 30px; width: 100%; }
-}
-
-.print-only { display: none; }
-
-.excel-section {
-    display: flex;
-    gap: 20px;
-    max-width: 900px;
-    margin: 20px auto;
-}
-
-.excel-box {
-    flex: 1;
-    background: #fff;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px dashed #27ae60;
-    text-align: center;
-}
-
-.action-btn {
-    padding: 5px 10px;
-    margin: 2px;
-    cursor: pointer;
-    border: none;
-    border-radius: 3px;
-}
-
-.btn-card { background: #3498db; color: white; }
-.btn-report { background: #f39c12; color: white; }
-// دالة عرض الطلاب مع أزرار الطباعة
-function displayStudents() {
-    const list = document.getElementById('studentsList');
-    let students = JSON.parse(localStorage.getItem('nexus_students')) || [];
-    
-    list.innerHTML = students.map((s, index) => `
-        <div class="student-item">
-            <span>${s.name} (${s.class})</span>
-            <button class="action-btn btn-card" onclick="printCard(${index})">طباعة بطاقة</button>
-            <button class="action-btn btn-report" onclick="printReport(${index})">طباعة جلاء</button>
-        </div>
-    `).join('');
-}
-
-// وظيفة طباعة بطاقة الطالب
-function printCard(index) {
-    let s = JSON.parse(localStorage.getItem('nexus_students'))[index];
-    const area = document.getElementById('printArea');
-    area.innerHTML = `
-        <div class="card">
-            <h3>هوية طالب - ${s.school}</h3>
-            <p>الاسم: ${s.name}</p>
-            <p>الرقم الدراسي: ${s.id}</p>
-            <p>الصف: ${s.class}</p>
-        </div>
-    `;
-    window.print();
-}
-
-// وظيفة طباعة الجلاء (نموذج مبسط)
-function printReport(index) {
-    let s = JSON.parse(localStorage.getItem('nexus_students'))[index];
-    const area = document.getElementById('printArea');
-    area.innerHTML = `
-        <div class="report">
-            <h1> مديرية التربية بحمص  - ثانوية ابن خلدون الخاصة - الجلاء المدرسي</h1>
-            <hr>
-            <p>اسم الطالب: ${s.name} &nbsp;&nbsp;&nbsp; الصف: ${s.class}</p>
-            <table border="1" width="100%" style="text-align:center;">
-                <tr><th>المادة</th><th>العلامة</th></tr>
-                <tr><td>اللغة العربية</td><td>-</td></tr>
-                <tr><td>الرياضيات</td><td>-</td></tr>
-<tr><td>اللغة الانكليزية</td><td>-</td></tr>
-<tr><td>اللغة الفرنسية</td><td>-</td></tr>
-<tr><td>علم الأحياء </td><td>-</td></tr>
-<tr><td>الفيزياء</td><td>-</td></tr>
-<tr><td>الكيمياء</td><td>-</td></tr>
-<tr><td>التربية الدينية</td><td>-</td></tr>
-            </table>
-            <p style="margin-top:50px;">توقيع المدير: ....................</p>
-        </div>
-    `;
-    window.print();
-}
-
-// معالجة ملفات الاكسل (مثال لعلامات الطلاب)
-document.getElementById('gradesExcel').addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onload = (event) => {
-        const data = new Uint8Array(event.target.result);
-        const workbook = XLSX.read(data, {type: 'array'});
-        alert('تم رفع ملف العلامات بنجاح وجاري معالجته...');
-        console.log(workbook);
-    };
-    reader.readAsArrayBuffer(file);
-});
