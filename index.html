@@ -3,196 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بوابة الطالب - كشف العلامات</title>
+    <title>الجلاء المدرسي - محمد زاهر البواب</title>
     <style>
-        :root {
-            --wpu-purple: #7b68ee;
-            --wpu-bg: #f8f9fa;
-            --wpu-green: #d4edda;
-            --wpu-text: #555;
-            --wpu-gold: #ffc107;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--wpu-bg);
-            margin: 0;
-            padding: 10px;
-        }
-        .card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
-            max-width: 500px;
-            margin: 10px auto;
-            overflow: hidden;
-        }
-        /* التعديل الجديد في الرأس */
-        .header-info {
-            background-color: #fff;
-            padding: 15px;
-            border-bottom: 2px solid var(--wpu-purple);
-            text-align: center;
-        }
-        .faculty-name {
-            font-weight: bold;
-            color: var(--wpu-purple);
-            margin-bottom: 5px;
-            font-size: 16px;
-        }
-        .student-main-info {
-            font-size: 15px;
-            color: #333;
-            margin-bottom: 8px;
-        }
-        .congrats-badge {
-            background-color: #fff3cd;
-            color: #856404;
-            padding: 5px 15px;
-            border-radius: 20px;
-            display: inline-block;
-            font-weight: bold;
-            font-size: 13px;
-            border: 1px solid #ffeeba;
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4; padding: 20px; }
+        .report-card { max-width: 900px; margin: auto; background: white; padding: 30px; border: 1px solid #ddd; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .header-title { text-align: center; color: #5a7d95; font-size: 24px; margin-bottom: 5px; }
+        .year { text-align: center; font-size: 20px; color: #777; margin-bottom: 20px; }
+        
+        .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; border-bottom: 2px solid #5a7d95; padding-bottom: 15px; }
+        .info-item { font-size: 14px; }
+        .info-item span { font-weight: bold; color: #333; }
 
-        .top-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 15px;
-            border-bottom: 1px solid #eee;
-            background: #fafafa;
-        }
-        .user-section {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 14px;
-            color: #666;
-        }
-        .user-img {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            border: 2px solid var(--wpu-purple);
-        }
-        .semester-title {
-            padding: 15px;
-            font-size: 17px;
-            font-weight: bold;
-            color: #444;
-            background: #fdfdfd;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th {
-            color: #666;
-            font-weight: bold;
-            font-size: 12px;
-            padding: 12px 10px;
-            border-bottom: 2px solid var(--wpu-purple);
-            background: #f9f9f9;
-        }
-        td {
-            padding: 12px 10px;
-            font-size: 14px;
-            color: var(--wpu-text);
-            border-bottom: 1px solid #f1f1f1;
-            text-align: center;
-        }
-        .subject-name {
-            text-align: right;
-            width: 40%;
-            font-weight: 500;
-        }
-        .gpa-section {
-            background-color: var(--wpu-green);
-            padding: 15px;
-            font-size: 14px;
-            color: #155724;
-            margin: 15px;
-            border-radius: 8px;
-            border-right: 5px solid #28a745;
-        }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; text-align: center; }
+        th, td { border: 1px solid #ccc; padding: 10px; font-size: 14px; }
+        
+        /* ألوان الهيدر مثل الصورة */
+        .main-header { background-color: #5a7d95; color: white; }
+        .sub-header { background-color: #8da9bc; color: white; }
+        
+        .total-row { background-color: #e9eff2; font-weight: bold; }
+        .footer { margin-top: 30px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .signature { text-align: center; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <div class="header-info">
-        <div class="faculty-name">كلية الهندسة - قسم الهندسة المعلوماتية</div>
-        <div class="student-main-info">
-            <strong>الطالب:</strong> محمد فرحان الغفري | <strong>السنة:</strong> الثالثة
-        </div>
-        <div class="congrats-badge">
-            🏆 المرتبة السادسة - تهانينا!
-        </div>
-    </div>
+<div class="report-card">
+    <div class="header-title">الجلاء المدرسي</div>
+    <div class="year">2025 - 2026</div>
 
-    <div class="top-header">
-        <div class="user-section">
-            <img src="https://via.placeholder.com/45" class="user-img" alt="user">
-            <span>الرقم الجامعي: 202311362</span>
-        </div>
-        <div style="font-size: 20px; color: var(--wpu-purple); cursor: pointer;">☰</div>
+    <div class="info-grid">
+        <div class="info-item">المديرية: <span>حمص</span></div>
+        <div class="info-item">المجمع: <span>حمص الجنوبي</span></div>
+        <div class="info-item">المدرسة: <span>عبد الرزاق بيرقدار</span></div>
+        <div class="info-item">اسم الطالب: <span>محمد زاهر البواب</span></div>
+        <div class="info-item">اسم الأم: <span>دعاء</span></div>
+        <div class="info-item">المواليد: <span>13-05-2014</span></div>
+        <div class="info-item">الصف: <span>السادس</span></div>
+        <div class="info-item">الرقم الدراسي: <span>0</span></div>
     </div>
-
-    <div class="semester-title">الفصل الأول 2025/2026</div>
 
     <table>
         <thead>
-            <tr>
-                <th class="subject-name">اسم المقرر</th>
-                <th>الرمز</th>
-                <th>ساعات</th>
-                <th>العلامة</th>
+            <tr class="main-header">
+                <th rowspan="2">المادة</th>
+                <th rowspan="2">الدرجة الدنيا</th>
+                <th rowspan="2">الدرجة العظمى</th>
+                <th colspan="3">الفصل الأول</th>
+            </tr>
+            <tr class="sub-header">
+                <th>درجة الأعمال</th>
+                <th>درجة الامتحان</th>
+                <th>المحصلة</th>
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td class="subject-name">الفيزياء (5)</td>
-                <td>EIT101</td>
-                <td>3</td>
-                <td>91</td>
-            </tr>
-            <tr>
-                <td class="subject-name">بنيان الحواسيب (5)</td>
-                <td>ECT214</td>
-                <td>3</td>
-                <td>77</td>
-            </tr>
-            <tr>
-                <td class="subject-name">قواعد المعطيات المتقدمة</td>
-                <td>EIT312</td>
-                <td>3</td>
-                <td>88</td>
-            </tr>
-            <tr>
-                <td class="subject-name">أساسيات الشبكات الحاسوبية (1)</td>
-                <td>EIT313</td>
-                <td>3</td>
-                <td>78</td>
-            </tr>
-            <tr>
-                <td class="subject-name">لغات البرمجة (1)</td>
-                <td>EIT210</td>
-                <td>3</td>
-                <td>70</td>
-            </tr>
-            <tr>
-                <td class="subject-name">مبادئ الذكاء الصنعي</td>
-                <td>EIT311</td>
-                <td>3</td>
-                <td>91</td>
+            <tr><td>أنشطة</td><td>40</td><td>100</td><td>100</td><td>100</td><td>100</td></tr>
+            <tr><td>اجتماعيات</td><td>40</td><td>100</td><td>82</td><td>79</td><td>81</td></tr>
+            <tr><td>التربية الدينية</td><td>40</td><td>100</td><td>77</td><td>83</td><td>80</td></tr>
+            <tr><td>التربية الرياضية</td><td>40</td><td>100</td><td>100</td><td>100</td><td>100</td></tr>
+            <tr><td>التربية الموسيقية</td><td>40</td><td>100</td><td>100</td><td>100</td><td>100</td></tr>
+            <tr><td>الرياضيات</td><td>40</td><td>100</td><td>78</td><td>80</td><td>84</td></tr>
+            <tr><td>العلوم والتربية الصحية</td><td>40</td><td>100</td><td>80</td><td>94</td><td>87</td></tr>
+            <tr><td>الفنون الجمالية</td><td>40</td><td>100</td><td>100</td><td>100</td><td>100</td></tr>
+            <tr><td>اللغة الإنكليزية</td><td>40</td><td>100</td><td>65</td><td>62</td><td>64</td></tr>
+            <tr><td>مهارات شفوية</td><td>50</td><td>100</td><td>80</td><td>85</td><td>83</td></tr>
+            <tr><td>مهارات كتابية</td><td>50</td><td>100</td><td>80</td><td>80</td><td>80</td></tr>
+            <tr class="total-row">
+                <td>المجموع</td>
+                <td>460</td>
+                <td>1100</td>
+                <td>-</td>
+                <td>-</td>
+                <td>959</td>
             </tr>
         </tbody>
     </table>
 
-    <div class="gpa-section">
-        <strong>المعدل الفصلي:</strong> 81.60 ( 2.86 ) <br>
-        <small>الحالة الأكاديمية: ناجح - لا يوجد إنذار</small>
+    <div class="footer">
+        <div>النتيجة النهائية: ....................</div>
+        <div class="signature">
+            <p>اسم المدير:</p>
+            <p><strong>مروه محمد نزيه السيد</strong></p>
+        </div>
     </div>
 </div>
 
