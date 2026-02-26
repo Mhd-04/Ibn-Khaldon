@@ -1,0 +1,179 @@
+{
+  "project_name": "Ibn Khaldoun Private High School (Digital Vision 2026)",
+  "identity": {
+    "tone": "Professional, Authoritative, Educational, Modern, Royal",
+    "core_values": ["Excellence", "Tradition", "Innovation", "Clarity"],
+    "visual_style": "Clean, High-Contrast, RTL-First, Role-Based Theming"
+  },
+  "typography": {
+    "primary_font": "Cairo, sans-serif",
+    "secondary_font": "Tajawal, sans-serif",
+    "usage": {
+      "headings": {
+        "font_family": "Cairo",
+        "weights": ["700", "800"],
+        "letter_spacing": "normal",
+        "line_height": "1.2"
+      },
+      "body": {
+        "font_family": "Tajawal",
+        "weights": ["400", "500"],
+        "line_height": "1.6"
+      },
+      "numbers": {
+        "font_family": "Cairo", 
+        "weights": ["600"]
+      }
+    },
+    "scale": {
+      "h1": "text-4xl md:text-5xl font-bold",
+      "h2": "text-3xl md:text-4xl font-bold",
+      "h3": "text-2xl font-semibold",
+      "body_lg": "text-lg",
+      "body_base": "text-base",
+      "body_sm": "text-sm",
+      "caption": "text-xs text-muted-foreground"
+    }
+  },
+  "colors": {
+    "admin_theme": {
+      "name": "Royal Purple",
+      "primary": "#6A1B9A",
+      "primary_foreground": "#FFFFFF",
+      "secondary": "#9C27B0",
+      "secondary_foreground": "#FFFFFF",
+      "background": "#F3E5F5",
+      "surface": "#FFFFFF",
+      "border": "#E1BEE7",
+      "accent": "#FFD700",
+      "description": "Used for Admin Dashboard. Represents luxury and authority."
+    },
+    "male_student_theme": {
+      "name": "Academic Grey",
+      "primary": "#455A64",
+      "primary_foreground": "#FFFFFF",
+      "secondary": "#607D8B",
+      "secondary_foreground": "#FFFFFF",
+      "background": "#ECEFF1",
+      "surface": "#FFFFFF",
+      "border": "#CFD8DC",
+      "accent": "#263238",
+      "description": "Used for Male Student Portal. Represents discipline and focus."
+    },
+    "female_student_theme": {
+      "name": "Royal Maroon",
+      "primary": "#880E4F",
+      "primary_foreground": "#FFFFFF",
+      "secondary": "#AD1457",
+      "secondary_foreground": "#FFFFFF",
+      "background": "#FCE4EC",
+      "surface": "#FFFFFF",
+      "border": "#F8BBD0",
+      "accent": "#C2185B",
+      "description": "Used for Female Student Portal. Represents elegance and vitality."
+    },
+    "status": {
+      "success": "#2E7D32",
+      "warning": "#F9A825",
+      "error": "#C62828",
+      "info": "#1565C0"
+    }
+  },
+  "layout_strategy": {
+    "direction": "rtl",
+    "grid_system": {
+      "dashboard": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6",
+      "form": "grid grid-cols-1 md:grid-cols-2 gap-6",
+      "list": "flex flex-col gap-4"
+    },
+    "spacing": {
+      "container_padding": "p-6 md:p-8",
+      "card_padding": "p-6",
+      "section_gap": "gap-8"
+    },
+    "sidebar": {
+      "width": "w-64",
+      "position": "right", 
+      "behavior": "collapsible"
+    },
+    "radius": {
+      "default": "rounded-lg",
+      "card": "rounded-xl",
+      "button": "rounded-md"
+    }
+  },
+  "components": {
+    "buttons": {
+      "default": "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
+      "outline": "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+      "ghost": "hover:bg-accent hover:text-accent-foreground",
+      "destructive": "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+    },
+    "cards": {
+      "default": "bg-card text-card-foreground rounded-xl border shadow-sm hover:shadow-md transition-shadow duration-200",
+      "stat_card": "flex flex-col justify-between p-6 bg-white rounded-xl shadow-sm border-l-4"
+    },
+    "inputs": {
+      "default": "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-right"
+    },
+    "tables": {
+      "wrapper": "w-full overflow-auto rounded-lg border bg-white shadow-sm",
+      "header": "bg-muted/50 text-right font-bold text-muted-foreground",
+      "row": "hover:bg-muted/50 transition-colors border-b last:border-0 text-right"
+    }
+  },
+  "assets": {
+    "logo": "https://customer-assets.emergentagent.com/job_7beeca3e-b314-4460-83b0-e8b48115e3c8/artifacts/80ve4mnx_1000219663.jpg",
+    "syrian_flag_placeholder": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Flag_of_Syria.svg/1200px-Flag_of_Syria.svg.png",
+    "placeholders": {
+      "student_avatar": "https://images.unsplash.com/photo-1614492898637-435e0f87cef8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNTl8MHwxfHNlYXJjaHwyfHxoaWdoJTIwc2Nob29sJTIwc3R1ZGVudCUyMGF2YXRhciUyMHByb2Zlc3Npb25hbHxlbnwwfHx8fDE3NzIxNDU2NjJ8MA&ixlib=rb-4.1.0&q=85",
+      "teacher_avatar": "https://images.pexels.com/photos/5212321/pexels-photo-5212321.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+    }
+  },
+  "features_implementation": {
+    "report_card": {
+      "library": "@react-pdf/renderer",
+      "requirements": [
+        "Must include School Logo (Top Right)",
+        "Must include Syrian Flag (Top Left)",
+        "Must use Cairo font for Arabic text",
+        "Must include tabular breakdown of grades",
+        "Must include signature area",
+        "Must be printable on A4"
+      ]
+    },
+    "financial_export": {
+      "library": "xlsx",
+      "requirements": [
+        "Export Teacher Salaries to Excel",
+        "Include Bonus/Deduction columns",
+        "Auto-calculate totals"
+      ]
+    },
+    "whatsapp_integration": {
+      "method": "Link generator",
+      "format": "https://wa.me/{phone}?text={message}"
+    }
+  },
+  "universal_guidelines": [
+    "ALWAYS ensure `dir='rtl'` is set on the document root or main layout.",
+    "Use logical CSS properties: `start` instead of `left`, `end` instead of `right`, `ms` (margin-start) instead of `ml`.",
+    "Ensure high contrast for Arabic text. Avoid thin font weights for Arabic body text (use 400 or 500).",
+    "Forms must be aligned right. Labels must be above inputs.",
+    "Dates must be formatted as `DD/MM/YYYY`.",
+    "Currency must be displayed as 'SYP' or 'ل.س'.",
+    "Do NOT use gradients for body text.",
+    "Use 'Sonner' for all toast notifications (success/error).",
+    "All interactive elements MUST have `data-testid` attributes."
+  ],
+  "instructions_to_main_agent": [
+    "1. Setup Tailwind config to support the 3 themes (Admin, Male, Female) using CSS variables or data attributes.",
+    "2. Install `lucide-react` for icons.",
+    "3. Use `recharts` for the dashboard analytics.",
+    "4. Create a `Layout` component that handles the theme switching based on user role.",
+    "5. Ensure the sidebar is RTL-friendly (on the right side).",
+    "6. Use the provided Logo URL for the login page and header.",
+    "7. For the Report Card, create a dedicated component that renders the PDF.",
+    "8. Mock the data for students, teachers, and grades."
+  ]
+}
