@@ -43,6 +43,7 @@ const Layout = ({ children }) => {
         { path: "/admin/teachers", icon: GraduationCap, label: "إدارة الأساتذة" },
         { path: "/admin/grades", icon: ClipboardList, label: "إدارة العلامات" },
         { path: "/admin/attendance", icon: Calendar, label: "الحضور والغياب" },
+        { path: "/admin/financial", icon: DollarSign, label: "الذمة المالية" },
         { path: "/admin/announcements", icon: Megaphone, label: "الإعلانات" },
         { path: "/admin/settings", icon: Settings, label: "الإعدادات" },
       ];
