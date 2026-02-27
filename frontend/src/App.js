@@ -13,6 +13,7 @@ import GradeManagement from "./pages/GradeManagement";
 import AttendanceManagement from "./pages/AttendanceManagement";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
 import SettingsPage from "./pages/SettingsPage";
+import FinancialManagement from "./pages/FinancialManagement";
 import StudentPortal from "./pages/StudentPortal";
 import TeacherPortal from "./pages/TeacherPortal";
 import Layout from "./components/Layout";
