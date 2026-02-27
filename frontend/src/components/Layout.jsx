@@ -16,7 +16,8 @@ import {
   X,
   BookOpen,
   FileText,
-  ExternalLink
+  ExternalLink,
+  DollarSign
 } from "lucide-react";
 
 const SCHOOL_LOGO = "https://customer-assets.emergentagent.com/job_7beeca3e-b314-4460-83b0-e8b48115e3c8/artifacts/80ve4mnx_1000219663.jpg";
