@@ -176,6 +176,11 @@ const AppRoutes = () => {
             <Layout><SettingsPage /></Layout>
           </ProtectedRoute>
         } />
+        <Route path="/admin/financial" element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <Layout><FinancialManagement /></Layout>
+          </ProtectedRoute>
+        } />
 
         {/* Teacher Routes */}
         <Route path="/teacher" element={
