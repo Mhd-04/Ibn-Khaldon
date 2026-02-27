@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { API, useAuth } from "../App";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -34,7 +34,10 @@ import {
   Edit,
   Trash2,
   FileSpreadsheet,
-  DollarSign
+  DollarSign,
+  Upload,
+  Download,
+  Printer
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -46,6 +49,8 @@ const TeacherManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState(null);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     full_name: "",
     gender: "male",
@@ -148,6 +153,96 @@ const TeacherManagement = () => {
     }
   };
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await axios.post(`${API}/import/salaries`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      toast.success(response.data.message);
+      if (response.data.errors?.length > 0) {
+        response.data.errors.forEach(err => toast.error(err));
+      }
+      fetchData();
+      setUploadDialogOpen(false);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "فشل في رفع الملف");
+    }
+  };
+
+  const printSalaries = () => {
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html dir="rtl">
+      <head>
+        <title>كشف الرواتب</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: 'Cairo', sans-serif; padding: 30px; direction: rtl; }
+          .header { text-align: center; margin-bottom: 30px; }
+          .title { font-size: 24px; color: #6A1B9A; font-weight: bold; }
+          .date { color: #666; margin-top: 10px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th, td { border: 1px solid #333; padding: 10px; text-align: center; }
+          th { background: #6A1B9A; color: white; }
+          .total-row { background: #f0e6f5; font-weight: bold; }
+          @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="title">ثانوية ابن خلدون الخاصة - كشف رواتب الأساتذة</div>
+          <div class="date">تاريخ الطباعة: ${new Date().toLocaleDateString('ar-SY')}</div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>اسم الأستاذ</th>
+              <th>المادة</th>
+              <th>الساعات</th>
+              <th>أجر الساعة</th>
+              <th>المكافآت</th>
+              <th>الخصومات</th>
+              <th>الراتب الصافي</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${teachers.map((t, i) => `
+              <tr>
+                <td>${i + 1}</td>
+                <td>${t.full_name}</td>
+                <td>${t.subject}</td>
+                <td>${t.total_hours}</td>
+                <td>${t.hourly_rate.toLocaleString()}</td>
+                <td>${t.bonus.toLocaleString()}</td>
+                <td>${t.deductions.toLocaleString()}</td>
+                <td class="total-row">${(t.calculated_salary || 0).toLocaleString()}</td>
+              </tr>
+            `).join('')}
+            <tr class="total-row">
+              <td colspan="7">إجمالي الرواتب</td>
+              <td>${totalSalaries.toLocaleString()} ل.س</td>
+            </tr>
+          </tbody>
+        </table>
+        <script>window.onload = function() { window.print(); }</script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   const resetForm = () => {
     setEditingTeacher(null);
     setFormData({
@@ -184,15 +279,33 @@ const TeacherManagement = () => {
           <h1 className="text-3xl font-bold font-[Cairo]">إدارة الأساتذة</h1>
           <p className="text-muted-foreground">إدارة بيانات الأساتذة والرواتب</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setUploadDialogOpen(true)}
+            className="gap-2"
+            data-testid="upload-salaries-button"
+          >
+            <Upload className="h-5 w-5" />
+            رفع Excel
+          </Button>
           <Button
             variant="outline"
             onClick={exportSalaries}
             className="gap-2"
             data-testid="export-salaries-button"
           >
-            <FileSpreadsheet className="h-5 w-5" />
+            <Download className="h-5 w-5" />
             تصدير Excel
+          </Button>
+          <Button
+            variant="outline"
+            onClick={printSalaries}
+            className="gap-2"
+            data-testid="print-salaries-button"
+          >
+            <Printer className="h-5 w-5" />
+            طباعة
           </Button>
           <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
@@ -330,6 +443,34 @@ const TeacherManagement = () => {
         </div>
       </div>
 
+      {/* Upload Dialog */}
+      <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+        <DialogContent dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="font-[Cairo]">رفع ملف Excel للرواتب</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <p className="text-sm text-muted-foreground">
+              يجب أن يحتوي ملف Excel على الأعمدة التالية بالترتيب:
+            </p>
+            <ul className="text-sm list-disc list-inside space-y-1 text-muted-foreground">
+              <li>اسم الأستاذ (يجب أن يكون موجوداً في النظام)</li>
+              <li>عدد الساعات</li>
+              <li>أجر الساعة</li>
+              <li>المكافآت</li>
+              <li>الخصومات</li>
+            </ul>
+            <Input
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={handleFileUpload}
+              ref={fileInputRef}
+              className="cursor-pointer"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="border-r-4 border-r-primary">
@@ -397,6 +538,7 @@ const TeacherManagement = () => {
                 <TableRow className="bg-muted/50">
                   <TableHead className="text-right font-bold">#</TableHead>
                   <TableHead className="text-right font-bold">الاسم</TableHead>
+                  <TableHead className="text-right font-bold">اسم المستخدم</TableHead>
                   <TableHead className="text-right font-bold">المادة</TableHead>
                   <TableHead className="text-right font-bold">الساعات</TableHead>
                   <TableHead className="text-right font-bold">أجر الساعة</TableHead>
@@ -409,7 +551,7 @@ const TeacherManagement = () => {
               <TableBody>
                 {filteredTeachers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                       لا يوجد أساتذة
                     </TableCell>
                   </TableRow>
@@ -418,6 +560,7 @@ const TeacherManagement = () => {
                     <TableRow key={teacher.id} className="hover:bg-muted/50" data-testid={`teacher-row-${index}`}>
                       <TableCell>{index + 1}</TableCell>
                       <TableCell className="font-medium">{teacher.full_name}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{teacher.username || "-"}</TableCell>
                       <TableCell>{teacher.subject}</TableCell>
                       <TableCell>{teacher.total_hours}</TableCell>
                       <TableCell>{teacher.hourly_rate.toLocaleString()}</TableCell>
