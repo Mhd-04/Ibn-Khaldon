@@ -14,8 +14,11 @@ import AttendanceManagement from "./pages/AttendanceManagement";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
 import SettingsPage from "./pages/SettingsPage";
 import FinancialManagement from "./pages/FinancialManagement";
+import SchedulesPage from "./pages/SchedulesPage";
+import HonorRoll from "./pages/HonorRoll";
 import StudentPortal from "./pages/StudentPortal";
 import TeacherPortal from "./pages/TeacherPortal";
+import SupervisorDashboard from "./pages/SupervisorDashboard";
 import Layout from "./components/Layout";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -36,6 +39,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [loading, setLoading] = useState(true);
+  const [selectedGender, setSelectedGender] = useState(localStorage.getItem("selectedGender") || null);
 
   useEffect(() => {
     const initAuth = async () => {
@@ -73,9 +77,16 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("selectedGender");
     setToken(null);
     setUser(null);
+    setSelectedGender(null);
     toast.success("تم تسجيل الخروج بنجاح");
+  };
+
+  const selectGender = (gender) => {
+    setSelectedGender(gender);
+    localStorage.setItem("selectedGender", gender);
   };
 
   const getThemeClass = () => {
@@ -86,11 +97,31 @@ export const AuthProvider = ({ children }) => {
     if (user.role === "teacher") {
       return "theme-teacher";
     }
-    return ""; // Admin uses default purple
+    // For admin/supervisor with gender selection
+    if (selectedGender === "female") return "theme-female";
+    if (selectedGender === "male") return "theme-male";
+    return ""; // Admin purple
+  };
+
+  const changePassword = async (currentPassword, newPassword) => {
+    try {
+      await axios.post(`${API}/auth/change-password`, 
+        { current_password: currentPassword, new_password: newPassword },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("تم تغيير كلمة المرور بنجاح");
+      return true;
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "فشل في تغيير كلمة المرور");
+      return false;
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading, getThemeClass }}>
+    <AuthContext.Provider value={{ 
+      user, token, login, logout, loading, getThemeClass, 
+      selectedGender, selectGender, changePassword 
+    }}>
       {children}
     </AuthContext.Provider>
   );
@@ -113,8 +144,8 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   }
 
   if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-    // Redirect to appropriate dashboard
     if (user.role === "admin") return <Navigate to="/admin" replace />;
+    if (user.role === "supervisor") return <Navigate to="/supervisor" replace />;
     if (user.role === "teacher") return <Navigate to="/teacher" replace />;
     if (user.role === "student") return <Navigate to="/student" replace />;
     return <Navigate to="/login" replace />;
@@ -135,10 +166,21 @@ const AppRoutes = () => {
     );
   }
 
+  const getDefaultRoute = () => {
+    if (!user) return "/login";
+    switch (user.role) {
+      case "admin": return "/admin";
+      case "supervisor": return "/supervisor";
+      case "teacher": return "/teacher";
+      case "student": return "/student";
+      default: return "/login";
+    }
+  };
+
   return (
     <div className={getThemeClass()}>
       <Routes>
-        <Route path="/login" element={user ? <Navigate to={user.role === "admin" ? "/admin" : user.role === "teacher" ? "/teacher" : "/student"} replace /> : <LoginPage />} />
+        <Route path="/login" element={user ? <Navigate to={getDefaultRoute()} replace /> : <LoginPage />} />
         
         {/* Admin Routes */}
         <Route path="/admin" element={
@@ -166,6 +208,21 @@ const AppRoutes = () => {
             <Layout><AttendanceManagement /></Layout>
           </ProtectedRoute>
         } />
+        <Route path="/admin/financial" element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <Layout><FinancialManagement /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/schedules" element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <Layout><SchedulesPage /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/honor-roll" element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <Layout><HonorRoll /></Layout>
+          </ProtectedRoute>
+        } />
         <Route path="/admin/announcements" element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <Layout><AnnouncementsPage /></Layout>
@@ -176,9 +233,51 @@ const AppRoutes = () => {
             <Layout><SettingsPage /></Layout>
           </ProtectedRoute>
         } />
-        <Route path="/admin/financial" element={
-          <ProtectedRoute allowedRoles={["admin"]}>
+
+        {/* Supervisor Routes */}
+        <Route path="/supervisor" element={
+          <ProtectedRoute allowedRoles={["supervisor"]}>
+            <Layout><SupervisorDashboard /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/supervisor/students" element={
+          <ProtectedRoute allowedRoles={["supervisor"]}>
+            <Layout><StudentManagement /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/supervisor/teachers" element={
+          <ProtectedRoute allowedRoles={["supervisor"]}>
+            <Layout><TeacherManagement /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/supervisor/grades" element={
+          <ProtectedRoute allowedRoles={["supervisor"]}>
+            <Layout><GradeManagement /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/supervisor/attendance" element={
+          <ProtectedRoute allowedRoles={["supervisor"]}>
+            <Layout><AttendanceManagement /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/supervisor/financial" element={
+          <ProtectedRoute allowedRoles={["supervisor"]}>
             <Layout><FinancialManagement /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/supervisor/schedules" element={
+          <ProtectedRoute allowedRoles={["supervisor"]}>
+            <Layout><SchedulesPage /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/supervisor/honor-roll" element={
+          <ProtectedRoute allowedRoles={["supervisor"]}>
+            <Layout><HonorRoll /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/supervisor/announcements" element={
+          <ProtectedRoute allowedRoles={["supervisor"]}>
+            <Layout><AnnouncementsPage /></Layout>
           </ProtectedRoute>
         } />
 
@@ -215,7 +314,6 @@ const AppRoutes = () => {
 };
 
 function App() {
-  // Seed database on first load
   useEffect(() => {
     const seedDB = async () => {
       try {

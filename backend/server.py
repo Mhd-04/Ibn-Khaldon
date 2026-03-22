@@ -17,6 +17,8 @@ import io
 from fastapi.responses import StreamingResponse
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+from openpyxl.drawing.image import Image
+import urllib.request
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -30,6 +32,9 @@ db = client[os.environ['DB_NAME']]
 SECRET_KEY = os.environ.get('JWT_SECRET', 'ibn-khaldoun-secret-key-2026')
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
+
+# School Logo URL
+SCHOOL_LOGO_URL = "https://customer-assets.emergentagent.com/job_7beeca3e-b314-4460-83b0-e8b48115e3c8/artifacts/80ve4mnx_1000219663.jpg"
 
 # Security
 security = HTTPBearer()
@@ -46,8 +51,8 @@ class UserBase(BaseModel):
     model_config = ConfigDict(extra="ignore")
     username: str
     full_name: str
-    role: str  # admin, teacher, student
-    gender: Optional[str] = "male"  # male, female
+    role: str  # admin, supervisor, teacher, student
+    gender: Optional[str] = "male"
 
 class UserCreate(UserBase):
     password: str
@@ -64,6 +69,10 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     user: UserResponse
 
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
 # Student Models
 class ParentInfo(BaseModel):
     father_name: str
@@ -74,10 +83,10 @@ class ParentInfo(BaseModel):
 class StudentBase(BaseModel):
     model_config = ConfigDict(extra="ignore")
     full_name: str
-    gender: str  # male, female
+    gender: str
     birth_date: str
-    class_name: str  # الصف
-    section: str  # الشعبة
+    class_name: str
+    section: str
     address: str
     parent_info: ParentInfo
     registration_date: Optional[str] = None
@@ -95,12 +104,13 @@ class TeacherBase(BaseModel):
     model_config = ConfigDict(extra="ignore")
     full_name: str
     gender: str
-    subject: str  # المادة
+    subject: str
     phone: str
-    hourly_rate: float  # أجر الساعة
+    hourly_rate: float
     total_hours: float = 0
     bonus: float = 0
     deductions: float = 0
+    assigned_classes: List[dict] = []  # [{class_name, section}]
 
 class TeacherCreate(TeacherBase):
     pass
@@ -111,86 +121,79 @@ class TeacherResponse(TeacherBase):
     username: Optional[str] = None
     calculated_salary: Optional[float] = None
 
-# Grade Models
+# Grade Models - New structure
 class GradeEntry(BaseModel):
     subject: str
-    first_exam: float = 0
-    second_exam: float = 0
-    oral: float = 0
-    homework: float = 0
-    final_exam: float = 0
-    total: float = 0
-
-class StudentGrades(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    student_id: str
-    student_name: str
-    class_name: str
-    section: str
-    semester: str  # الفصل الدراسي
-    academic_year: str
-    grades: List[GradeEntry]
-    is_published: bool = False
+    oral_skills: float = 0  # مهارات شفهية
+    homework: float = 0  # وظائف
+    quiz: float = 0  # مذاكرة
+    exam: float = 0  # امتحان
+    total: float = 0  # المجموع
 
 class GradeCreate(BaseModel):
     student_id: str
     subject: str
-    first_exam: float = 0
-    second_exam: float = 0
-    oral: float = 0
+    oral_skills: float = 0
     homework: float = 0
-    final_exam: float = 0
+    quiz: float = 0
+    exam: float = 0
     semester: str
     academic_year: str
 
-# Attendance Models
-class AttendanceRecord(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    student_id: str
-    student_name: str
+# Schedule Models
+class ScheduleItem(BaseModel):
+    day: str
+    period: int
+    subject: str
+    teacher_name: str
     class_name: str
-    date: str
-    status: str  # present, absent, late
-    notes: Optional[str] = None
+    section: str
 
+class ExamScheduleItem(BaseModel):
+    date: str
+    time: str
+    subject: str
+    class_name: str
+    section: str
+    duration: str
+
+# Class Fee Model
+class ClassFee(BaseModel):
+    class_name: str
+    annual_fee: float
+
+# Attendance Models
 class AttendanceCreate(BaseModel):
     student_id: str
     date: str
     status: str
     notes: Optional[str] = None
 
+# Teacher Attendance
+class TeacherAttendanceCreate(BaseModel):
+    teacher_id: str
+    date: str
+    status: str
+    notes: Optional[str] = None
+
 # Announcement Models
-class AnnouncementBase(BaseModel):
-    model_config = ConfigDict(extra="ignore")
+class AnnouncementCreate(BaseModel):
     title: str
     content: str
-    target_audience: str  # all, teachers, students
-    is_active: bool = True
+    target_audience: str
+    target_gender: Optional[str] = None  # male, female, all
 
-class AnnouncementCreate(AnnouncementBase):
-    pass
-
-class AnnouncementResponse(AnnouncementBase):
+class AnnouncementResponse(BaseModel):
     id: str
+    title: str
+    content: str
+    target_audience: str
+    target_gender: Optional[str] = None
+    is_active: bool
     created_at: str
     created_by: str
 
-# Financial Models (الذمة المالية)
-class PaymentRecord(BaseModel):
-    amount: float
-    date: str
-    notes: Optional[str] = None
-    receipt_number: Optional[str] = None
-
-class StudentFinancial(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    student_id: str
-    student_name: str
-    class_name: str
-    total_fee: float  # القسط الكامل
-    payments: List[PaymentRecord] = []
-    discount: float = 0  # الخصم
-    
+# Financial Models
 class FinancialCreate(BaseModel):
     student_id: str
     total_fee: float
@@ -209,7 +212,6 @@ class SchoolSettings(BaseModel):
     address: str = "حمص - سوريا"
     phone: str = ""
     email: str = ""
-    default_fee: float = 0  # القسط الافتراضي
 
 # ==================== HELPER FUNCTIONS ====================
 
@@ -225,12 +227,24 @@ def create_access_token(data: dict) -> str:
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-def generate_username(prefix: str, name: str) -> str:
-    """Generate a readable username from name"""
-    # Remove spaces and take first part
-    clean_name = name.replace(" ", "_")[:10]
-    short_id = str(uuid.uuid4())[:4]
-    return f"{prefix}_{clean_name}_{short_id}"
+def generate_simple_username(role: str, name: str, counter: int = 0) -> str:
+    """Generate simple readable username"""
+    # Take first name only
+    first_name = name.split()[0] if name else "user"
+    if counter > 0:
+        return f"{first_name}{counter}"
+    return first_name
+
+async def get_next_username(role: str, name: str) -> str:
+    """Get next available simple username"""
+    base_name = name.split()[0] if name else "user"
+    counter = 0
+    while True:
+        username = generate_simple_username(role, name, counter)
+        existing = await db.users.find_one({"username": username})
+        if not existing:
+            return username
+        counter += 1
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     try:
@@ -254,9 +268,14 @@ async def require_admin(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user
 
-async def require_teacher_or_admin(current_user: dict = Depends(get_current_user)):
-    if current_user.get("role") not in ["admin", "teacher"]:
-        raise HTTPException(status_code=403, detail="Teacher or Admin access required")
+async def require_admin_or_supervisor(current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") not in ["admin", "supervisor"]:
+        raise HTTPException(status_code=403, detail="Admin or Supervisor access required")
+    return current_user
+
+async def require_teacher_or_above(current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") not in ["admin", "supervisor", "teacher"]:
+        raise HTTPException(status_code=403, detail="Teacher or higher access required")
     return current_user
 
 # ==================== AUTH ROUTES ====================
@@ -291,59 +310,75 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         gender=current_user.get("gender", "male")
     )
 
+@api_router.post("/auth/change-password")
+async def change_password(data: PasswordChange, current_user: dict = Depends(get_current_user)):
+    if not verify_password(data.current_password, current_user.get("password_hash", "")):
+        raise HTTPException(status_code=400, detail="كلمة المرور الحالية غير صحيحة")
+    
+    new_hash = hash_password(data.new_password)
+    await db.users.update_one({"id": current_user["id"]}, {"$set": {"password_hash": new_hash}})
+    return {"message": "تم تغيير كلمة المرور بنجاح"}
+
 # ==================== STUDENT ROUTES ====================
 
-@api_router.get("/students", response_model=List[StudentResponse])
-async def get_students(current_user: dict = Depends(get_current_user)):
+@api_router.get("/students")
+async def get_students(gender: Optional[str] = None, class_name: Optional[str] = None, current_user: dict = Depends(get_current_user)):
     if current_user["role"] == "student":
-        # Students can only see their own data
         student = await db.students.find_one({"user_id": current_user["id"]}, {"_id": 0})
         if student:
             user = await db.users.find_one({"id": student.get("user_id")}, {"_id": 0})
             student["username"] = user.get("username") if user else None
-            return [StudentResponse(**student)]
+            return [student]
         return []
     
-    students = await db.students.find({}, {"_id": 0}).to_list(1000)
-    # Add username to each student
+    query = {}
+    
+    # Filter by gender for teachers (they see only their assigned gender)
+    if current_user["role"] == "teacher":
+        teacher = await db.teachers.find_one({"user_id": current_user["id"]}, {"_id": 0})
+        if teacher and teacher.get("assigned_classes"):
+            # Get classes this teacher is assigned to
+            assigned = teacher.get("assigned_classes", [])
+            class_sections = [(a["class_name"], a["section"]) for a in assigned]
+            query["$or"] = [{"class_name": c, "section": s} for c, s in class_sections]
+    
+    if gender:
+        query["gender"] = gender
+    if class_name:
+        query["class_name"] = class_name
+    
+    students = await db.students.find(query, {"_id": 0}).to_list(1000)
     for student in students:
         user = await db.users.find_one({"id": student.get("user_id")}, {"_id": 0})
         student["username"] = user.get("username") if user else None
-    return [StudentResponse(**s) for s in students]
+    return students
 
-@api_router.get("/students/{student_id}", response_model=StudentResponse)
+@api_router.get("/students/{student_id}")
 async def get_student(student_id: str, current_user: dict = Depends(get_current_user)):
     student = await db.students.find_one({"id": student_id}, {"_id": 0})
     if not student:
         raise HTTPException(status_code=404, detail="الطالب غير موجود")
     user = await db.users.find_one({"id": student.get("user_id")}, {"_id": 0})
     student["username"] = user.get("username") if user else None
-    return StudentResponse(**student)
+    return student
 
 @api_router.get("/students/{student_id}/details")
 async def get_student_details(student_id: str, current_user: dict = Depends(get_current_user)):
-    """Get full student details including grades, attendance, and financial info"""
     student = await db.students.find_one({"id": student_id}, {"_id": 0})
     if not student:
         raise HTTPException(status_code=404, detail="الطالب غير موجود")
     
-    # Get username
     user = await db.users.find_one({"id": student.get("user_id")}, {"_id": 0})
     student["username"] = user.get("username") if user else None
     
-    # Get grades
     grades = await db.grades.find({"student_id": student_id}, {"_id": 0}).to_list(100)
-    
-    # Get attendance
     attendance = await db.attendance.find({"student_id": student_id}, {"_id": 0}).to_list(1000)
     
-    # Calculate attendance stats
     total_days = len(attendance)
     present_days = len([a for a in attendance if a["status"] == "present"])
     absent_days = len([a for a in attendance if a["status"] == "absent"])
     late_days = len([a for a in attendance if a["status"] == "late"])
     
-    # Get financial info
     financial = await db.financials.find_one({"student_id": student_id}, {"_id": 0})
     if financial:
         total_paid = sum(p.get("amount", 0) for p in financial.get("payments", []))
@@ -366,25 +401,19 @@ async def get_student_details(student_id: str, current_user: dict = Depends(get_
         "financial": financial
     }
 
-@api_router.post("/students", response_model=StudentResponse)
-async def create_student(student: StudentCreate, current_user: dict = Depends(require_admin)):
+@api_router.post("/students")
+async def create_student(student: StudentCreate, current_user: dict = Depends(require_admin_or_supervisor)):
     student_dict = student.model_dump()
     student_dict["id"] = str(uuid.uuid4())
     student_dict["registration_date"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     
-    # Create user account for student with readable username
     user_id = str(uuid.uuid4())
-    username = generate_username("student", student.full_name)
-    
-    # Check if username exists
-    existing = await db.users.find_one({"username": username})
-    if existing:
-        username = f"{username}_{str(uuid.uuid4())[:4]}"
+    username = await get_next_username("student", student.full_name)
     
     user_doc = {
         "id": user_id,
         "username": username,
-        "password_hash": hash_password("123456"),  # Default password
+        "password_hash": hash_password("123456"),
         "full_name": student.full_name,
         "role": "student",
         "gender": student.gender
@@ -393,11 +422,26 @@ async def create_student(student: StudentCreate, current_user: dict = Depends(re
     student_dict["user_id"] = user_id
     
     await db.students.insert_one(student_dict)
+    
+    # Auto-create financial record with class fee
+    class_fee = await db.class_fees.find_one({"class_name": student.class_name}, {"_id": 0})
+    fee_amount = class_fee.get("annual_fee", 0) if class_fee else 0
+    
+    await db.financials.insert_one({
+        "id": str(uuid.uuid4()),
+        "student_id": student_dict["id"],
+        "student_name": student.full_name,
+        "class_name": student.class_name,
+        "total_fee": fee_amount,
+        "discount": 0,
+        "payments": []
+    })
+    
     student_dict["username"] = username
-    return StudentResponse(**student_dict)
+    return student_dict
 
-@api_router.put("/students/{student_id}", response_model=StudentResponse)
-async def update_student(student_id: str, student: StudentCreate, current_user: dict = Depends(require_admin)):
+@api_router.put("/students/{student_id}")
+async def update_student(student_id: str, student: StudentCreate, current_user: dict = Depends(require_admin_or_supervisor)):
     existing = await db.students.find_one({"id": student_id})
     if not existing:
         raise HTTPException(status_code=404, detail="الطالب غير موجود")
@@ -405,7 +449,6 @@ async def update_student(student_id: str, student: StudentCreate, current_user: 
     update_data = student.model_dump()
     await db.students.update_one({"id": student_id}, {"$set": update_data})
     
-    # Update user info too
     if existing.get("user_id"):
         await db.users.update_one(
             {"id": existing["user_id"]},
@@ -415,29 +458,71 @@ async def update_student(student_id: str, student: StudentCreate, current_user: 
     updated = await db.students.find_one({"id": student_id}, {"_id": 0})
     user = await db.users.find_one({"id": updated.get("user_id")}, {"_id": 0})
     updated["username"] = user.get("username") if user else None
-    return StudentResponse(**updated)
+    return updated
 
 @api_router.delete("/students/{student_id}")
-async def delete_student(student_id: str, current_user: dict = Depends(require_admin)):
+async def delete_student(student_id: str, current_user: dict = Depends(require_admin_or_supervisor)):
     student = await db.students.find_one({"id": student_id})
     if not student:
         raise HTTPException(status_code=404, detail="الطالب غير موجود")
     
-    # Delete associated user
     if student.get("user_id"):
         await db.users.delete_one({"id": student["user_id"]})
     
-    # Delete related data
     await db.grades.delete_many({"student_id": student_id})
     await db.attendance.delete_many({"student_id": student_id})
     await db.financials.delete_one({"student_id": student_id})
-    
     await db.students.delete_one({"id": student_id})
     return {"message": "تم حذف الطالب بنجاح"}
 
+# ==================== HONOR ROLL (لوحة الشرف) ====================
+
+@api_router.get("/honor-roll")
+async def get_honor_roll(class_name: Optional[str] = None, gender: Optional[str] = None, current_user: dict = Depends(get_current_user)):
+    """Get top 3 students per class"""
+    query = {}
+    if class_name:
+        query["class_name"] = class_name
+    if gender:
+        query["gender"] = gender
+    
+    students = await db.students.find(query, {"_id": 0}).to_list(1000)
+    
+    # Get grades for all students and calculate totals
+    student_totals = []
+    for student in students:
+        grades = await db.grades.find({"student_id": student["id"], "is_published": True}, {"_id": 0}).to_list(100)
+        total = 0
+        subjects_count = 0
+        for grade_doc in grades:
+            for g in grade_doc.get("grades", []):
+                total += g.get("total", 0)
+                subjects_count += 1
+        
+        average = total / subjects_count if subjects_count > 0 else 0
+        student_totals.append({
+            "student": student,
+            "total": total,
+            "average": round(average, 2),
+            "subjects_count": subjects_count
+        })
+    
+    # Group by class and get top 3
+    from collections import defaultdict
+    by_class = defaultdict(list)
+    for st in student_totals:
+        by_class[st["student"]["class_name"]].append(st)
+    
+    honor_roll = {}
+    for cls, students_list in by_class.items():
+        sorted_students = sorted(students_list, key=lambda x: x["average"], reverse=True)[:3]
+        honor_roll[cls] = sorted_students
+    
+    return honor_roll
+
 # ==================== TEACHER ROUTES ====================
 
-@api_router.get("/teachers", response_model=List[TeacherResponse])
+@api_router.get("/teachers")
 async def get_teachers(current_user: dict = Depends(get_current_user)):
     if current_user["role"] == "teacher":
         teacher = await db.teachers.find_one({"user_id": current_user["id"]}, {"_id": 0})
@@ -445,7 +530,7 @@ async def get_teachers(current_user: dict = Depends(get_current_user)):
             teacher["calculated_salary"] = (teacher["hourly_rate"] * teacher["total_hours"]) + teacher["bonus"] - teacher["deductions"]
             user = await db.users.find_one({"id": teacher.get("user_id")}, {"_id": 0})
             teacher["username"] = user.get("username") if user else None
-            return [TeacherResponse(**teacher)]
+            return [teacher]
         return []
     
     teachers = await db.teachers.find({}, {"_id": 0}).to_list(1000)
@@ -454,31 +539,16 @@ async def get_teachers(current_user: dict = Depends(get_current_user)):
         t["calculated_salary"] = (t["hourly_rate"] * t["total_hours"]) + t["bonus"] - t["deductions"]
         user = await db.users.find_one({"id": t.get("user_id")}, {"_id": 0})
         t["username"] = user.get("username") if user else None
-        result.append(TeacherResponse(**t))
+        result.append(t)
     return result
 
-@api_router.get("/teachers/{teacher_id}", response_model=TeacherResponse)
-async def get_teacher(teacher_id: str, current_user: dict = Depends(get_current_user)):
-    teacher = await db.teachers.find_one({"id": teacher_id}, {"_id": 0})
-    if not teacher:
-        raise HTTPException(status_code=404, detail="الأستاذ غير موجود")
-    teacher["calculated_salary"] = (teacher["hourly_rate"] * teacher["total_hours"]) + teacher["bonus"] - teacher["deductions"]
-    user = await db.users.find_one({"id": teacher.get("user_id")}, {"_id": 0})
-    teacher["username"] = user.get("username") if user else None
-    return TeacherResponse(**teacher)
-
-@api_router.post("/teachers", response_model=TeacherResponse)
-async def create_teacher(teacher: TeacherCreate, current_user: dict = Depends(require_admin)):
+@api_router.post("/teachers")
+async def create_teacher(teacher: TeacherCreate, current_user: dict = Depends(require_admin_or_supervisor)):
     teacher_dict = teacher.model_dump()
     teacher_dict["id"] = str(uuid.uuid4())
     
-    # Create user account for teacher with readable username
     user_id = str(uuid.uuid4())
-    username = generate_username("teacher", teacher.full_name)
-    
-    existing = await db.users.find_one({"username": username})
-    if existing:
-        username = f"{username}_{str(uuid.uuid4())[:4]}"
+    username = await get_next_username("teacher", teacher.full_name)
     
     user_doc = {
         "id": user_id,
@@ -494,10 +564,10 @@ async def create_teacher(teacher: TeacherCreate, current_user: dict = Depends(re
     await db.teachers.insert_one(teacher_dict)
     teacher_dict["calculated_salary"] = (teacher_dict["hourly_rate"] * teacher_dict["total_hours"]) + teacher_dict["bonus"] - teacher_dict["deductions"]
     teacher_dict["username"] = username
-    return TeacherResponse(**teacher_dict)
+    return teacher_dict
 
-@api_router.put("/teachers/{teacher_id}", response_model=TeacherResponse)
-async def update_teacher(teacher_id: str, teacher: TeacherCreate, current_user: dict = Depends(require_admin)):
+@api_router.put("/teachers/{teacher_id}")
+async def update_teacher(teacher_id: str, teacher: TeacherCreate, current_user: dict = Depends(require_admin_or_supervisor)):
     existing = await db.teachers.find_one({"id": teacher_id})
     if not existing:
         raise HTTPException(status_code=404, detail="الأستاذ غير موجود")
@@ -515,10 +585,10 @@ async def update_teacher(teacher_id: str, teacher: TeacherCreate, current_user: 
     updated["calculated_salary"] = (updated["hourly_rate"] * updated["total_hours"]) + updated["bonus"] - updated["deductions"]
     user = await db.users.find_one({"id": updated.get("user_id")}, {"_id": 0})
     updated["username"] = user.get("username") if user else None
-    return TeacherResponse(**updated)
+    return updated
 
 @api_router.delete("/teachers/{teacher_id}")
-async def delete_teacher(teacher_id: str, current_user: dict = Depends(require_admin)):
+async def delete_teacher(teacher_id: str, current_user: dict = Depends(require_admin_or_supervisor)):
     teacher = await db.teachers.find_one({"id": teacher_id})
     if not teacher:
         raise HTTPException(status_code=404, detail="الأستاذ غير موجود")
@@ -529,42 +599,74 @@ async def delete_teacher(teacher_id: str, current_user: dict = Depends(require_a
     await db.teachers.delete_one({"id": teacher_id})
     return {"message": "تم حذف الأستاذ بنجاح"}
 
-@api_router.post("/teachers/import")
-async def import_teachers_excel(file: UploadFile = File(...), current_user: dict = Depends(require_admin)):
-    """Import teachers from Excel file"""
-    if not file.filename.endswith(('.xlsx', '.xls')):
-        raise HTTPException(status_code=400, detail="يجب أن يكون الملف بصيغة Excel")
+@api_router.put("/teachers/{teacher_id}/assign-classes")
+async def assign_teacher_classes(teacher_id: str, data: dict, current_user: dict = Depends(require_admin_or_supervisor)):
+    """Assign classes/sections to a teacher (Supervisor function)"""
+    teacher = await db.teachers.find_one({"id": teacher_id})
+    if not teacher:
+        raise HTTPException(status_code=404, detail="الأستاذ غير موجود")
     
-    content = await file.read()
-    wb = load_workbook(io.BytesIO(content))
-    ws = wb.active
+    assigned_classes = data.get("assigned_classes", [])
+    await db.teachers.update_one({"id": teacher_id}, {"$set": {"assigned_classes": assigned_classes}})
+    return {"message": "تم تحديث الشعب المسؤول عنها"}
+
+# ==================== TEACHER ATTENDANCE (حضور المعلمين) ====================
+
+@api_router.get("/teacher-attendance")
+async def get_teacher_attendance(date: Optional[str] = None, current_user: dict = Depends(require_admin_or_supervisor)):
+    query = {}
+    if date:
+        query["date"] = date
+    records = await db.teacher_attendance.find(query, {"_id": 0}).to_list(1000)
+    return records
+
+@api_router.post("/teacher-attendance")
+async def mark_teacher_attendance(record: TeacherAttendanceCreate, current_user: dict = Depends(require_admin_or_supervisor)):
+    teacher = await db.teachers.find_one({"id": record.teacher_id}, {"_id": 0})
+    if not teacher:
+        raise HTTPException(status_code=404, detail="المعلم غير موجود")
     
-    imported = 0
-    errors = []
+    existing = await db.teacher_attendance.find_one({
+        "teacher_id": record.teacher_id,
+        "date": record.date
+    })
     
-    for row_num, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
-        try:
-            if not row[0]:  # Skip empty rows
-                continue
-            
-            teacher_data = {
-                "full_name": str(row[0]) if row[0] else "",
-                "gender": str(row[1]) if row[1] else "male",
-                "subject": str(row[2]) if row[2] else "",
-                "phone": str(row[3]) if row[3] else "",
-                "hourly_rate": float(row[4]) if row[4] else 0,
-                "total_hours": float(row[5]) if row[5] else 0,
-                "bonus": float(row[6]) if row[6] else 0,
-                "deductions": float(row[7]) if row[7] else 0
-            }
-            
-            teacher = TeacherCreate(**teacher_data)
-            await create_teacher(teacher, current_user)
-            imported += 1
-        except Exception as e:
-            errors.append(f"صف {row_num}: {str(e)}")
+    if existing:
+        await db.teacher_attendance.update_one(
+            {"teacher_id": record.teacher_id, "date": record.date},
+            {"$set": {"status": record.status, "notes": record.notes}}
+        )
+    else:
+        await db.teacher_attendance.insert_one({
+            "id": str(uuid.uuid4()),
+            "teacher_id": record.teacher_id,
+            "teacher_name": teacher["full_name"],
+            "date": record.date,
+            "status": record.status,
+            "notes": record.notes
+        })
     
-    return {"message": f"تم استيراد {imported} أستاذ", "errors": errors}
+    return {"message": "تم تسجيل حضور المعلم"}
+
+# ==================== SUPERVISOR ROUTES ====================
+
+@api_router.post("/supervisors")
+async def create_supervisor(data: dict, current_user: dict = Depends(require_admin)):
+    """Create a supervisor account (Admin only)"""
+    user_id = str(uuid.uuid4())
+    username = await get_next_username("supervisor", data.get("full_name", "موجه"))
+    
+    user_doc = {
+        "id": user_id,
+        "username": username,
+        "password_hash": hash_password(data.get("password", "123456")),
+        "full_name": data.get("full_name", ""),
+        "role": "supervisor",
+        "gender": data.get("gender", "male")
+    }
+    await db.users.insert_one(user_doc)
+    
+    return {"message": "تم إنشاء حساب الموجه", "username": username}
 
 # ==================== GRADES ROUTES ====================
 
@@ -574,29 +676,32 @@ async def get_all_grades(current_user: dict = Depends(get_current_user)):
         student = await db.students.find_one({"user_id": current_user["id"]}, {"_id": 0})
         if student:
             grades = await db.grades.find({"student_id": student["id"], "is_published": True}, {"_id": 0}).to_list(100)
+            # For students, hide oral_skills and homework
+            for grade_doc in grades:
+                for g in grade_doc.get("grades", []):
+                    g.pop("oral_skills", None)
+                    g.pop("homework", None)
             return grades
         return []
     
-    grades = await db.grades.find({}, {"_id": 0}).to_list(1000)
-    return grades
-
-@api_router.get("/grades/student/{student_id}")
-async def get_student_grades(student_id: str, current_user: dict = Depends(get_current_user)):
-    if current_user["role"] == "student":
-        student = await db.students.find_one({"user_id": current_user["id"]})
-        if not student or student["id"] != student_id:
-            raise HTTPException(status_code=403, detail="غير مصرح لك بالوصول")
+    query = {}
+    if current_user["role"] == "teacher":
+        teacher = await db.teachers.find_one({"user_id": current_user["id"]}, {"_id": 0})
+        if teacher:
+            assigned = teacher.get("assigned_classes", [])
+            if assigned:
+                query["$or"] = [{"class_name": a["class_name"], "section": a["section"]} for a in assigned]
     
-    grades = await db.grades.find({"student_id": student_id}, {"_id": 0}).to_list(100)
+    grades = await db.grades.find(query, {"_id": 0}).to_list(1000)
     return grades
 
 @api_router.post("/grades")
-async def create_or_update_grade(grade: GradeCreate, current_user: dict = Depends(require_teacher_or_admin)):
+async def create_or_update_grade(grade: GradeCreate, current_user: dict = Depends(require_teacher_or_above)):
     student = await db.students.find_one({"id": grade.student_id}, {"_id": 0})
     if not student:
         raise HTTPException(status_code=404, detail="الطالب غير موجود")
     
-    total = grade.first_exam + grade.second_exam + grade.oral + grade.homework + grade.final_exam
+    total = grade.oral_skills + grade.homework + grade.quiz + grade.exam
     
     existing = await db.grades.find_one({
         "student_id": grade.student_id,
@@ -606,16 +711,14 @@ async def create_or_update_grade(grade: GradeCreate, current_user: dict = Depend
     
     grade_entry = {
         "subject": grade.subject,
-        "first_exam": grade.first_exam,
-        "second_exam": grade.second_exam,
-        "oral": grade.oral,
+        "oral_skills": grade.oral_skills,
         "homework": grade.homework,
-        "final_exam": grade.final_exam,
+        "quiz": grade.quiz,
+        "exam": grade.exam,
         "total": total
     }
     
     if existing:
-        # Update existing grades
         grades_list = existing.get("grades", [])
         updated = False
         for i, g in enumerate(grades_list):
@@ -631,13 +734,13 @@ async def create_or_update_grade(grade: GradeCreate, current_user: dict = Depend
             {"$set": {"grades": grades_list}}
         )
     else:
-        # Create new grade document
         grade_doc = {
             "id": str(uuid.uuid4()),
             "student_id": grade.student_id,
             "student_name": student["full_name"],
             "class_name": student["class_name"],
             "section": student["section"],
+            "gender": student["gender"],
             "semester": grade.semester,
             "academic_year": grade.academic_year,
             "grades": [grade_entry],
@@ -648,7 +751,7 @@ async def create_or_update_grade(grade: GradeCreate, current_user: dict = Depend
     return {"message": "تم حفظ العلامات بنجاح"}
 
 @api_router.post("/grades/publish")
-async def publish_grades(data: dict, current_user: dict = Depends(require_admin)):
+async def publish_grades(data: dict, current_user: dict = Depends(require_admin_or_supervisor)):
     semester = data.get("semester")
     academic_year = data.get("academic_year")
     
@@ -659,47 +762,111 @@ async def publish_grades(data: dict, current_user: dict = Depends(require_admin)
     
     return {"message": f"تم نشر علامات {result.modified_count} طالب", "count": result.modified_count}
 
+# ==================== SCHEDULES (الجداول) ====================
+
+@api_router.get("/schedules/weekly")
+async def get_weekly_schedule(class_name: Optional[str] = None, section: Optional[str] = None, current_user: dict = Depends(get_current_user)):
+    query = {}
+    if class_name:
+        query["class_name"] = class_name
+    if section:
+        query["section"] = section
+    
+    schedules = await db.weekly_schedules.find(query, {"_id": 0}).to_list(1000)
+    return schedules
+
+@api_router.post("/schedules/weekly")
+async def save_weekly_schedule(data: dict, current_user: dict = Depends(require_admin_or_supervisor)):
+    schedule_doc = {
+        "id": str(uuid.uuid4()),
+        "class_name": data.get("class_name"),
+        "section": data.get("section"),
+        "items": data.get("items", []),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_by": current_user["full_name"]
+    }
+    
+    # Upsert
+    await db.weekly_schedules.update_one(
+        {"class_name": data.get("class_name"), "section": data.get("section")},
+        {"$set": schedule_doc},
+        upsert=True
+    )
+    return {"message": "تم حفظ برنامج الأسبوع"}
+
+@api_router.get("/schedules/exams")
+async def get_exam_schedule(class_name: Optional[str] = None, current_user: dict = Depends(get_current_user)):
+    query = {}
+    if class_name:
+        query["class_name"] = class_name
+    
+    schedules = await db.exam_schedules.find(query, {"_id": 0}).to_list(1000)
+    return schedules
+
+@api_router.post("/schedules/exams")
+async def save_exam_schedule(data: dict, current_user: dict = Depends(require_admin_or_supervisor)):
+    schedule_doc = {
+        "id": str(uuid.uuid4()),
+        "class_name": data.get("class_name"),
+        "exam_type": data.get("exam_type", ""),  # midterm, final
+        "items": data.get("items", []),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_by": current_user["full_name"]
+    }
+    
+    await db.exam_schedules.update_one(
+        {"class_name": data.get("class_name"), "exam_type": data.get("exam_type")},
+        {"$set": schedule_doc},
+        upsert=True
+    )
+    return {"message": "تم حفظ برنامج الامتحان"}
+
+# ==================== CLASS FEES (أقساط الصفوف) ====================
+
+@api_router.get("/class-fees")
+async def get_class_fees(current_user: dict = Depends(require_admin_or_supervisor)):
+    fees = await db.class_fees.find({}, {"_id": 0}).to_list(100)
+    return fees
+
+@api_router.post("/class-fees")
+async def set_class_fee(data: ClassFee, current_user: dict = Depends(require_admin_or_supervisor)):
+    await db.class_fees.update_one(
+        {"class_name": data.class_name},
+        {"$set": {"class_name": data.class_name, "annual_fee": data.annual_fee}},
+        upsert=True
+    )
+    return {"message": f"تم تحديد قسط {data.class_name}"}
+
 # ==================== ATTENDANCE ROUTES ====================
 
 @api_router.get("/attendance")
-async def get_attendance(date: Optional[str] = None, class_name: Optional[str] = None, current_user: dict = Depends(require_teacher_or_admin)):
+async def get_attendance(date: Optional[str] = None, class_name: Optional[str] = None, gender: Optional[str] = None, current_user: dict = Depends(require_teacher_or_above)):
     query = {}
     if date:
         query["date"] = date
     if class_name:
         query["class_name"] = class_name
+    if gender:
+        # Need to join with students - filter after
+        pass
     
     records = await db.attendance.find(query, {"_id": 0}).to_list(1000)
+    
+    if gender:
+        # Filter by gender
+        student_ids = [r["student_id"] for r in records]
+        students = await db.students.find({"id": {"$in": student_ids}, "gender": gender}, {"_id": 0}).to_list(1000)
+        valid_ids = {s["id"] for s in students}
+        records = [r for r in records if r["student_id"] in valid_ids]
+    
     return records
 
-@api_router.get("/attendance/student/{student_id}")
-async def get_student_attendance(student_id: str, current_user: dict = Depends(get_current_user)):
-    """Get attendance records and stats for a specific student"""
-    attendance = await db.attendance.find({"student_id": student_id}, {"_id": 0}).to_list(1000)
-    
-    total_days = len(attendance)
-    present_days = len([a for a in attendance if a["status"] == "present"])
-    absent_days = len([a for a in attendance if a["status"] == "absent"])
-    late_days = len([a for a in attendance if a["status"] == "late"])
-    
-    return {
-        "records": attendance,
-        "stats": {
-            "total_days": total_days,
-            "present_days": present_days,
-            "absent_days": absent_days,
-            "late_days": late_days,
-            "attendance_rate": round((present_days / total_days * 100) if total_days > 0 else 0, 1)
-        }
-    }
-
 @api_router.post("/attendance")
-async def mark_attendance(record: AttendanceCreate, current_user: dict = Depends(require_teacher_or_admin)):
+async def mark_attendance(record: AttendanceCreate, current_user: dict = Depends(require_teacher_or_above)):
     student = await db.students.find_one({"id": record.student_id}, {"_id": 0})
     if not student:
         raise HTTPException(status_code=404, detail="الطالب غير موجود")
     
-    # Check if already marked
     existing = await db.attendance.find_one({
         "student_id": record.student_id,
         "date": record.date
@@ -711,21 +878,22 @@ async def mark_attendance(record: AttendanceCreate, current_user: dict = Depends
             {"$set": {"status": record.status, "notes": record.notes}}
         )
     else:
-        attendance_doc = {
+        await db.attendance.insert_one({
             "id": str(uuid.uuid4()),
             "student_id": record.student_id,
             "student_name": student["full_name"],
             "class_name": student["class_name"],
+            "section": student["section"],
+            "gender": student["gender"],
             "date": record.date,
             "status": record.status,
             "notes": record.notes
-        }
-        await db.attendance.insert_one(attendance_doc)
+        })
     
     return {"message": "تم تسجيل الحضور"}
 
 @api_router.post("/attendance/bulk")
-async def mark_bulk_attendance(data: dict, current_user: dict = Depends(require_teacher_or_admin)):
+async def mark_bulk_attendance(data: dict, current_user: dict = Depends(require_teacher_or_above)):
     records = data.get("records", [])
     date = data.get("date")
     
@@ -748,42 +916,51 @@ async def mark_bulk_attendance(data: dict, current_user: dict = Depends(require_
                     "student_id": record["student_id"],
                     "student_name": student["full_name"],
                     "class_name": student["class_name"],
+                    "section": student["section"],
+                    "gender": student["gender"],
                     "date": date,
                     "status": record["status"]
                 })
     
     return {"message": f"تم تسجيل حضور {len(records)} طالب"}
 
-# ==================== FINANCIAL ROUTES (الذمة المالية) ====================
+# ==================== FINANCIAL ROUTES ====================
 
 @api_router.get("/financials")
-async def get_all_financials(current_user: dict = Depends(require_admin)):
-    """Get all students financial records"""
+async def get_all_financials(search: Optional[str] = None, gender: Optional[str] = None, current_user: dict = Depends(require_admin_or_supervisor)):
+    query = {}
+    
     financials = await db.financials.find({}, {"_id": 0}).to_list(1000)
+    
+    # Get student info for gender filter
+    if gender or search:
+        result = []
+        for f in financials:
+            student = await db.students.find_one({"id": f["student_id"]}, {"_id": 0})
+            if student:
+                if gender and student.get("gender") != gender:
+                    continue
+                if search and search.lower() not in f.get("student_name", "").lower():
+                    continue
+            
+            total_paid = sum(p.get("amount", 0) for p in f.get("payments", []))
+            f["total_paid"] = total_paid
+            f["remaining"] = f.get("total_fee", 0) - f.get("discount", 0) - total_paid
+            f["gender"] = student.get("gender") if student else None
+            result.append(f)
+        return result
     
     for f in financials:
         total_paid = sum(p.get("amount", 0) for p in f.get("payments", []))
         f["total_paid"] = total_paid
         f["remaining"] = f.get("total_fee", 0) - f.get("discount", 0) - total_paid
+        student = await db.students.find_one({"id": f["student_id"]}, {"_id": 0})
+        f["gender"] = student.get("gender") if student else None
     
     return financials
 
-@api_router.get("/financials/{student_id}")
-async def get_student_financial(student_id: str, current_user: dict = Depends(get_current_user)):
-    """Get financial record for a specific student"""
-    financial = await db.financials.find_one({"student_id": student_id}, {"_id": 0})
-    if not financial:
-        return None
-    
-    total_paid = sum(p.get("amount", 0) for p in financial.get("payments", []))
-    financial["total_paid"] = total_paid
-    financial["remaining"] = financial.get("total_fee", 0) - financial.get("discount", 0) - total_paid
-    
-    return financial
-
 @api_router.post("/financials")
-async def create_or_update_financial(data: FinancialCreate, current_user: dict = Depends(require_admin)):
-    """Create or update student financial record"""
+async def create_or_update_financial(data: FinancialCreate, current_user: dict = Depends(require_admin_or_supervisor)):
     student = await db.students.find_one({"id": data.student_id}, {"_id": 0})
     if not student:
         raise HTTPException(status_code=404, detail="الطالب غير موجود")
@@ -796,7 +973,7 @@ async def create_or_update_financial(data: FinancialCreate, current_user: dict =
             {"$set": {"total_fee": data.total_fee, "discount": data.discount}}
         )
     else:
-        financial_doc = {
+        await db.financials.insert_one({
             "id": str(uuid.uuid4()),
             "student_id": data.student_id,
             "student_name": student["full_name"],
@@ -804,24 +981,25 @@ async def create_or_update_financial(data: FinancialCreate, current_user: dict =
             "total_fee": data.total_fee,
             "discount": data.discount,
             "payments": []
-        }
-        await db.financials.insert_one(financial_doc)
+        })
     
     return {"message": "تم حفظ البيانات المالية"}
 
 @api_router.post("/financials/payment")
-async def add_payment(data: PaymentCreate, current_user: dict = Depends(require_admin)):
-    """Add a payment to student financial record"""
+async def add_payment(data: PaymentCreate, current_user: dict = Depends(require_admin_or_supervisor)):
     financial = await db.financials.find_one({"student_id": data.student_id})
     if not financial:
         raise HTTPException(status_code=404, detail="لا يوجد سجل مالي لهذا الطالب")
+    
+    receipt_number = f"RCP-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:4].upper()}"
     
     payment = {
         "id": str(uuid.uuid4()),
         "amount": data.amount,
         "date": data.date,
         "notes": data.notes,
-        "receipt_number": f"RCP-{str(uuid.uuid4())[:8].upper()}"
+        "receipt_number": receipt_number,
+        "received_by": current_user["full_name"]
     }
     
     await db.financials.update_one(
@@ -829,21 +1007,46 @@ async def add_payment(data: PaymentCreate, current_user: dict = Depends(require_
         {"$push": {"payments": payment}}
     )
     
-    return {"message": "تم تسجيل الدفعة", "receipt_number": payment["receipt_number"]}
+    return {"message": "تم تسجيل الدفعة", "receipt_number": receipt_number, "payment": payment}
 
-@api_router.get("/financials/export/excel")
-async def export_financials_excel(current_user: dict = Depends(require_admin)):
-    """Export all financial records to Excel"""
-    financials = await db.financials.find({}, {"_id": 0}).to_list(1000)
+@api_router.get("/financials/receipt/{student_id}/{payment_id}")
+async def get_payment_receipt(student_id: str, payment_id: str, current_user: dict = Depends(require_admin_or_supervisor)):
+    """Get receipt data for printing"""
+    financial = await db.financials.find_one({"student_id": student_id}, {"_id": 0})
+    if not financial:
+        raise HTTPException(status_code=404, detail="لا يوجد سجل مالي")
+    
+    payment = None
+    for p in financial.get("payments", []):
+        if p.get("id") == payment_id:
+            payment = p
+            break
+    
+    if not payment:
+        raise HTTPException(status_code=404, detail="الدفعة غير موجودة")
+    
+    student = await db.students.find_one({"id": student_id}, {"_id": 0})
+    
+    return {
+        "student_name": financial.get("student_name"),
+        "class_name": financial.get("class_name"),
+        "payment": payment,
+        "parent_name": student.get("parent_info", {}).get("father_name") if student else ""
+    }
+
+# ==================== EXPORT ROUTES ====================
+
+@api_router.get("/export/salaries")
+async def export_salaries_excel(current_user: dict = Depends(require_admin_or_supervisor)):
+    teachers = await db.teachers.find({}, {"_id": 0}).to_list(1000)
     
     wb = Workbook()
     ws = wb.active
-    ws.title = "الذمة المالية"
+    ws.title = "كشف الرواتب"
     ws.sheet_view.rightToLeft = True
     
-    # Styling
-    header_font = Font(bold=True, size=12, color="FFFFFF")
     header_fill = PatternFill(start_color="6A1B9A", end_color="6A1B9A", fill_type="solid")
+    header_font = Font(bold=True, size=12, color="FFFFFF")
     border = Border(
         left=Side(style='thin'),
         right=Side(style='thin'),
@@ -851,17 +1054,244 @@ async def export_financials_excel(current_user: dict = Depends(require_admin)):
         bottom=Side(style='thin')
     )
     
-    # Title
+    # Title with logo placeholder
+    ws.merge_cells('A1:H1')
+    ws['A1'] = "ثانوية ابن خلدون الخاصة - كشف رواتب الأساتذة"
+    ws['A1'].font = Font(bold=True, size=16)
+    ws['A1'].alignment = Alignment(horizontal='center')
+    
+    ws.merge_cells('A2:H2')
+    ws['A2'] = f"تاريخ التصدير: {datetime.now().strftime('%Y-%m-%d')}"
+    ws['A2'].alignment = Alignment(horizontal='center')
+    
+    headers = ['#', 'اسم الأستاذ', 'المادة', 'عدد الساعات', 'أجر الساعة', 'المكافآت', 'الخصومات', 'الراتب الصافي']
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=4, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = border
+        cell.alignment = Alignment(horizontal='center')
+    
+    total_salaries = 0
+    for idx, teacher in enumerate(teachers, 1):
+        salary = (teacher["hourly_rate"] * teacher["total_hours"]) + teacher["bonus"] - teacher["deductions"]
+        total_salaries += salary
+        
+        row_data = [
+            idx,
+            teacher["full_name"],
+            teacher["subject"],
+            teacher["total_hours"],
+            teacher["hourly_rate"],
+            teacher["bonus"],
+            teacher["deductions"],
+            salary
+        ]
+        
+        for col, value in enumerate(row_data, 1):
+            cell = ws.cell(row=idx + 4, column=col, value=value)
+            cell.border = border
+            cell.alignment = Alignment(horizontal='center')
+    
+    total_row = len(teachers) + 5
+    ws.merge_cells(f'A{total_row}:G{total_row}')
+    ws[f'A{total_row}'] = "إجمالي الرواتب"
+    ws[f'A{total_row}'].font = Font(bold=True)
+    ws[f'A{total_row}'].alignment = Alignment(horizontal='center')
+    ws[f'H{total_row}'] = total_salaries
+    ws[f'H{total_row}'].font = Font(bold=True)
+    
+    for col in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']:
+        ws.column_dimensions[col].width = 15 if col != 'B' else 25
+    
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=salaries_report.xlsx"}
+    )
+
+@api_router.get("/export/students-list")
+async def export_students_list(class_name: str, section: str, gender: Optional[str] = None, current_user: dict = Depends(require_admin_or_supervisor)):
+    """Export student list for a specific class/section"""
+    query = {"class_name": class_name, "section": section}
+    if gender:
+        query["gender"] = gender
+    
+    students = await db.students.find(query, {"_id": 0}).sort("full_name", 1).to_list(1000)
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "قائمة الطلاب"
+    ws.sheet_view.rightToLeft = True
+    
+    header_fill = PatternFill(start_color="6A1B9A", end_color="6A1B9A", fill_type="solid")
+    header_font = Font(bold=True, size=12, color="FFFFFF")
+    border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    ws.merge_cells('A1:D1')
+    ws['A1'] = "ثانوية ابن خلدون الخاصة"
+    ws['A1'].font = Font(bold=True, size=16)
+    ws['A1'].alignment = Alignment(horizontal='center')
+    
+    ws.merge_cells('A2:D2')
+    gender_text = "ذكور" if gender == "male" else "إناث" if gender == "female" else "الكل"
+    ws['A2'] = f"قائمة طلاب {class_name} - الشعبة {section} ({gender_text})"
+    ws['A2'].alignment = Alignment(horizontal='center')
+    
+    headers = ['#', 'الاسم الكامل', 'اسم الأب', 'هاتف ولي الأمر']
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=4, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = border
+        cell.alignment = Alignment(horizontal='center')
+    
+    for idx, student in enumerate(students, 1):
+        row_data = [
+            idx,
+            student["full_name"],
+            student.get("parent_info", {}).get("father_name", ""),
+            student.get("parent_info", {}).get("father_phone", "")
+        ]
+        
+        for col, value in enumerate(row_data, 1):
+            cell = ws.cell(row=idx + 4, column=col, value=value)
+            cell.border = border
+            cell.alignment = Alignment(horizontal='center' if col == 1 else 'right')
+    
+    ws.column_dimensions['A'].width = 5
+    ws.column_dimensions['B'].width = 30
+    ws.column_dimensions['C'].width = 20
+    ws.column_dimensions['D'].width = 15
+    
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=students_{class_name}_{section}.xlsx"}
+    )
+
+@api_router.get("/export/grades-sheet")
+async def export_grades_sheet(class_name: str, section: str, semester: str, academic_year: str, gender: Optional[str] = None, current_user: dict = Depends(require_admin_or_supervisor)):
+    """Export grades sheet for a class/section"""
+    query = {"class_name": class_name, "section": section, "semester": semester, "academic_year": academic_year}
+    if gender:
+        query["gender"] = gender
+    
+    grades = await db.grades.find(query, {"_id": 0}).to_list(1000)
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "كشف العلامات"
+    ws.sheet_view.rightToLeft = True
+    
+    header_fill = PatternFill(start_color="6A1B9A", end_color="6A1B9A", fill_type="solid")
+    header_font = Font(bold=True, size=11, color="FFFFFF")
+    border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    # Get all subjects
+    all_subjects = set()
+    for g in grades:
+        for grade_entry in g.get("grades", []):
+            all_subjects.add(grade_entry["subject"])
+    subjects = sorted(list(all_subjects))
+    
+    ws.merge_cells(f'A1:{chr(65 + len(subjects) + 1)}1')
+    ws['A1'] = "ثانوية ابن خلدون الخاصة - كشف العلامات"
+    ws['A1'].font = Font(bold=True, size=16)
+    ws['A1'].alignment = Alignment(horizontal='center')
+    
+    gender_text = "ذكور" if gender == "male" else "إناث" if gender == "female" else ""
+    ws.merge_cells(f'A2:{chr(65 + len(subjects) + 1)}2')
+    ws['A2'] = f"{class_name} - الشعبة {section} | {semester} - {academic_year} {gender_text}"
+    ws['A2'].alignment = Alignment(horizontal='center')
+    
+    headers = ['#', 'اسم الطالب'] + subjects
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=4, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = border
+        cell.alignment = Alignment(horizontal='center')
+    
+    for idx, grade_doc in enumerate(grades, 1):
+        ws.cell(row=idx + 4, column=1, value=idx).border = border
+        ws.cell(row=idx + 4, column=2, value=grade_doc["student_name"]).border = border
+        
+        grade_map = {g["subject"]: g["total"] for g in grade_doc.get("grades", [])}
+        for col_idx, subj in enumerate(subjects, 3):
+            cell = ws.cell(row=idx + 4, column=col_idx, value=grade_map.get(subj, ""))
+            cell.border = border
+            cell.alignment = Alignment(horizontal='center')
+    
+    ws.column_dimensions['A'].width = 5
+    ws.column_dimensions['B'].width = 25
+    for i, _ in enumerate(subjects):
+        ws.column_dimensions[chr(67 + i)].width = 12
+    
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=grades_{class_name}_{section}.xlsx"}
+    )
+
+@api_router.get("/export/financials")
+async def export_financials_excel(gender: Optional[str] = None, current_user: dict = Depends(require_admin_or_supervisor)):
+    financials = await db.financials.find({}, {"_id": 0}).to_list(1000)
+    
+    if gender:
+        result = []
+        for f in financials:
+            student = await db.students.find_one({"id": f["student_id"]}, {"_id": 0})
+            if student and student.get("gender") == gender:
+                result.append(f)
+        financials = result
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "الذمة المالية"
+    ws.sheet_view.rightToLeft = True
+    
+    header_fill = PatternFill(start_color="6A1B9A", end_color="6A1B9A", fill_type="solid")
+    header_font = Font(bold=True, size=12, color="FFFFFF")
+    border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
     ws.merge_cells('A1:G1')
     ws['A1'] = "ثانوية ابن خلدون الخاصة - كشف الذمة المالية"
     ws['A1'].font = Font(bold=True, size=16)
     ws['A1'].alignment = Alignment(horizontal='center')
     
+    gender_text = "ذكور" if gender == "male" else "إناث" if gender == "female" else ""
     ws.merge_cells('A2:G2')
-    ws['A2'] = f"تاريخ التصدير: {datetime.now().strftime('%Y-%m-%d')}"
+    ws['A2'] = f"تاريخ التصدير: {datetime.now().strftime('%Y-%m-%d')} {gender_text}"
     ws['A2'].alignment = Alignment(horizontal='center')
     
-    # Headers
     headers = ['#', 'اسم الطالب', 'الصف', 'القسط الكامل', 'الخصم', 'المدفوع', 'المتبقي']
     for col, header in enumerate(headers, 1):
         cell = ws.cell(row=4, column=col, value=header)
@@ -870,7 +1300,6 @@ async def export_financials_excel(current_user: dict = Depends(require_admin)):
         cell.border = border
         cell.alignment = Alignment(horizontal='center')
     
-    # Data
     total_fees = 0
     total_paid = 0
     total_remaining = 0
@@ -898,7 +1327,6 @@ async def export_financials_excel(current_user: dict = Depends(require_admin)):
             cell.border = border
             cell.alignment = Alignment(horizontal='center')
     
-    # Total row
     total_row = len(financials) + 5
     ws.merge_cells(f'A{total_row}:C{total_row}')
     ws[f'A{total_row}'] = "الإجمالي"
@@ -907,14 +1335,8 @@ async def export_financials_excel(current_user: dict = Depends(require_admin)):
     ws[f'F{total_row}'] = total_paid
     ws[f'G{total_row}'] = total_remaining
     
-    # Column widths
-    ws.column_dimensions['A'].width = 5
-    ws.column_dimensions['B'].width = 25
-    ws.column_dimensions['C'].width = 20
-    ws.column_dimensions['D'].width = 15
-    ws.column_dimensions['E'].width = 12
-    ws.column_dimensions['F'].width = 15
-    ws.column_dimensions['G'].width = 15
+    for col in ['A', 'B', 'C', 'D', 'E', 'F', 'G']:
+        ws.column_dimensions[col].width = 15 if col != 'B' else 25
     
     buffer = io.BytesIO()
     wb.save(buffer)
@@ -926,214 +1348,52 @@ async def export_financials_excel(current_user: dict = Depends(require_admin)):
         headers={"Content-Disposition": "attachment; filename=financials_report.xlsx"}
     )
 
-@api_router.post("/financials/import")
-async def import_financials_excel(file: UploadFile = File(...), current_user: dict = Depends(require_admin)):
-    """Import financial records from Excel"""
-    if not file.filename.endswith(('.xlsx', '.xls')):
-        raise HTTPException(status_code=400, detail="يجب أن يكون الملف بصيغة Excel")
-    
-    content = await file.read()
-    wb = load_workbook(io.BytesIO(content))
-    ws = wb.active
-    
-    imported = 0
-    errors = []
-    
-    for row_num, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
-        try:
-            if not row[0]:
-                continue
-            
-            student_name = str(row[0])
-            student = await db.students.find_one({"full_name": student_name}, {"_id": 0})
-            
-            if not student:
-                errors.append(f"صف {row_num}: الطالب '{student_name}' غير موجود")
-                continue
-            
-            financial_data = FinancialCreate(
-                student_id=student["id"],
-                total_fee=float(row[1]) if row[1] else 0,
-                discount=float(row[2]) if row[2] else 0
-            )
-            
-            await create_or_update_financial(financial_data, current_user)
-            imported += 1
-        except Exception as e:
-            errors.append(f"صف {row_num}: {str(e)}")
-    
-    return {"message": f"تم استيراد {imported} سجل", "errors": errors}
-
 # ==================== ANNOUNCEMENTS ROUTES ====================
 
-@api_router.get("/announcements", response_model=List[AnnouncementResponse])
+@api_router.get("/announcements")
 async def get_announcements(current_user: dict = Depends(get_current_user)):
     query = {"is_active": True}
+    
+    # Filter by role
     if current_user["role"] == "student":
         query["target_audience"] = {"$in": ["all", "students"]}
     elif current_user["role"] == "teacher":
         query["target_audience"] = {"$in": ["all", "teachers"]}
     
+    # Filter by gender if applicable
+    user_gender = current_user.get("gender")
+    if user_gender and current_user["role"] == "student":
+        query["$or"] = [
+            {"target_gender": None},
+            {"target_gender": "all"},
+            {"target_gender": user_gender}
+        ]
+    
     announcements = await db.announcements.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
-    return [AnnouncementResponse(**a) for a in announcements]
+    return announcements
 
-@api_router.post("/announcements", response_model=AnnouncementResponse)
-async def create_announcement(announcement: AnnouncementCreate, current_user: dict = Depends(require_admin)):
+@api_router.post("/announcements")
+async def create_announcement(announcement: AnnouncementCreate, current_user: dict = Depends(require_admin_or_supervisor)):
     announcement_dict = announcement.model_dump()
     announcement_dict["id"] = str(uuid.uuid4())
     announcement_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     announcement_dict["created_by"] = current_user["full_name"]
+    announcement_dict["is_active"] = True
     
     await db.announcements.insert_one(announcement_dict)
-    return AnnouncementResponse(**announcement_dict)
+    return announcement_dict
 
 @api_router.delete("/announcements/{announcement_id}")
-async def delete_announcement(announcement_id: str, current_user: dict = Depends(require_admin)):
+async def delete_announcement(announcement_id: str, current_user: dict = Depends(require_admin_or_supervisor)):
     result = await db.announcements.delete_one({"id": announcement_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="الإعلان غير موجود")
     return {"message": "تم حذف الإعلان"}
 
-# ==================== FINANCIAL/EXPORT ROUTES ====================
-
-@api_router.get("/export/salaries")
-async def export_salaries_excel(current_user: dict = Depends(require_admin)):
-    teachers = await db.teachers.find({}, {"_id": 0}).to_list(1000)
-    
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "كشف الرواتب"
-    ws.sheet_view.rightToLeft = True
-    
-    # Styling
-    header_font = Font(bold=True, size=12)
-    header_fill = PatternFill(start_color="6A1B9A", end_color="6A1B9A", fill_type="solid")
-    header_font_white = Font(bold=True, size=12, color="FFFFFF")
-    border = Border(
-        left=Side(style='thin'),
-        right=Side(style='thin'),
-        top=Side(style='thin'),
-        bottom=Side(style='thin')
-    )
-    
-    # Title
-    ws.merge_cells('A1:H1')
-    ws['A1'] = "ثانوية ابن خلدون الخاصة - كشف رواتب الأساتذة"
-    ws['A1'].font = Font(bold=True, size=16)
-    ws['A1'].alignment = Alignment(horizontal='center')
-    
-    ws.merge_cells('A2:H2')
-    ws['A2'] = f"تاريخ التصدير: {datetime.now().strftime('%Y-%m-%d')}"
-    ws['A2'].alignment = Alignment(horizontal='center')
-    
-    # Headers
-    headers = ['#', 'اسم الأستاذ', 'المادة', 'عدد الساعات', 'أجر الساعة', 'المكافآت', 'الخصومات', 'الراتب الصافي']
-    for col, header in enumerate(headers, 1):
-        cell = ws.cell(row=4, column=col, value=header)
-        cell.font = header_font_white
-        cell.fill = header_fill
-        cell.border = border
-        cell.alignment = Alignment(horizontal='center')
-    
-    # Data
-    total_salaries = 0
-    for idx, teacher in enumerate(teachers, 1):
-        salary = (teacher["hourly_rate"] * teacher["total_hours"]) + teacher["bonus"] - teacher["deductions"]
-        total_salaries += salary
-        
-        row_data = [
-            idx,
-            teacher["full_name"],
-            teacher["subject"],
-            teacher["total_hours"],
-            teacher["hourly_rate"],
-            teacher["bonus"],
-            teacher["deductions"],
-            salary
-        ]
-        
-        for col, value in enumerate(row_data, 1):
-            cell = ws.cell(row=idx + 4, column=col, value=value)
-            cell.border = border
-            cell.alignment = Alignment(horizontal='center')
-    
-    # Total row
-    total_row = len(teachers) + 5
-    ws.merge_cells(f'A{total_row}:G{total_row}')
-    ws[f'A{total_row}'] = "إجمالي الرواتب"
-    ws[f'A{total_row}'].font = header_font
-    ws[f'A{total_row}'].alignment = Alignment(horizontal='center')
-    ws[f'H{total_row}'] = total_salaries
-    ws[f'H{total_row}'].font = header_font
-    
-    # Column widths
-    ws.column_dimensions['A'].width = 5
-    ws.column_dimensions['B'].width = 25
-    ws.column_dimensions['C'].width = 15
-    ws.column_dimensions['D'].width = 12
-    ws.column_dimensions['E'].width = 12
-    ws.column_dimensions['F'].width = 12
-    ws.column_dimensions['G'].width = 12
-    ws.column_dimensions['H'].width = 15
-    
-    # Save to buffer
-    buffer = io.BytesIO()
-    wb.save(buffer)
-    buffer.seek(0)
-    
-    return StreamingResponse(
-        buffer,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=salaries_report.xlsx"}
-    )
-
-@api_router.post("/import/salaries")
-async def import_salaries_excel(file: UploadFile = File(...), current_user: dict = Depends(require_admin)):
-    """Import/Update teacher salaries from Excel"""
-    if not file.filename.endswith(('.xlsx', '.xls')):
-        raise HTTPException(status_code=400, detail="يجب أن يكون الملف بصيغة Excel")
-    
-    content = await file.read()
-    wb = load_workbook(io.BytesIO(content))
-    ws = wb.active
-    
-    updated = 0
-    errors = []
-    
-    for row_num, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
-        try:
-            if not row[0]:
-                continue
-            
-            teacher_name = str(row[0])
-            teacher = await db.teachers.find_one({"full_name": teacher_name})
-            
-            if not teacher:
-                errors.append(f"صف {row_num}: الأستاذ '{teacher_name}' غير موجود")
-                continue
-            
-            update_data = {}
-            if row[1] is not None:
-                update_data["total_hours"] = float(row[1])
-            if row[2] is not None:
-                update_data["hourly_rate"] = float(row[2])
-            if row[3] is not None:
-                update_data["bonus"] = float(row[3])
-            if row[4] is not None:
-                update_data["deductions"] = float(row[4])
-            
-            if update_data:
-                await db.teachers.update_one({"id": teacher["id"]}, {"$set": update_data})
-                updated += 1
-        except Exception as e:
-            errors.append(f"صف {row_num}: {str(e)}")
-    
-    return {"message": f"تم تحديث {updated} سجل", "errors": errors}
-
 # ==================== SETTINGS ROUTES ====================
 
 @api_router.get("/settings")
-async def get_settings(current_user: dict = Depends(require_admin)):
+async def get_settings(current_user: dict = Depends(require_admin_or_supervisor)):
     settings = await db.settings.find_one({}, {"_id": 0})
     if not settings:
         settings = SchoolSettings().model_dump()
@@ -1148,7 +1408,7 @@ async def update_settings(settings: SchoolSettings, current_user: dict = Depends
 # ==================== DASHBOARD STATS ====================
 
 @api_router.get("/dashboard/stats")
-async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
+async def get_dashboard_stats(gender: Optional[str] = None, current_user: dict = Depends(get_current_user)):
     if current_user["role"] == "student":
         student = await db.students.find_one({"user_id": current_user["id"]}, {"_id": 0})
         if student:
@@ -1157,24 +1417,31 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
             present_count = len([a for a in attendance if a["status"] == "present"])
             return {
                 "grades_count": len(grades),
-                "attendance_rate": (present_count / len(attendance) * 100) if attendance else 0
+                "attendance_rate": round((present_count / len(attendance) * 100) if attendance else 0, 1)
             }
         return {}
     
-    students_count = await db.students.count_documents({})
+    query = {}
+    if gender:
+        query["gender"] = gender
+    
+    students_count = await db.students.count_documents(query)
     teachers_count = await db.teachers.count_documents({})
     male_students = await db.students.count_documents({"gender": "male"})
     female_students = await db.students.count_documents({"gender": "female"})
     
-    # Calculate total salaries
     teachers = await db.teachers.find({}, {"_id": 0}).to_list(1000)
     total_salaries = sum(
         (t["hourly_rate"] * t["total_hours"]) + t["bonus"] - t["deductions"]
         for t in teachers
     )
     
-    # Calculate total fees and payments
-    financials = await db.financials.find({}, {"_id": 0}).to_list(1000)
+    financials_query = {}
+    if gender:
+        student_ids = [s["id"] for s in await db.students.find({"gender": gender}, {"_id": 0, "id": 1}).to_list(1000)]
+        financials_query["student_id"] = {"$in": student_ids}
+    
+    financials = await db.financials.find(financials_query, {"_id": 0}).to_list(1000)
     total_fees = sum(f.get("total_fee", 0) for f in financials)
     total_paid = sum(
         sum(p.get("amount", 0) for p in f.get("payments", []))
@@ -1211,7 +1478,7 @@ async def get_classes():
             "الصف الثالث الثانوي علمي",
             "الصف الثالث الثانوي أدبي"
         ],
-        "sections": ["أ", "ب", "ج", "د"],
+        "sections": ["الأولى", "الثانية", "الثالثة", "الرابعة"],
         "subjects": [
             "اللغة العربية",
             "اللغة الإنجليزية",
@@ -1228,14 +1495,15 @@ async def get_classes():
             "المعلوماتية"
         ],
         "semesters": ["الفصل الأول", "الفصل الثاني"],
-        "academic_years": ["2024-2025", "2025-2026", "2026-2027"]
+        "academic_years": ["2024-2025", "2025-2026", "2026-2027"],
+        "days": ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"],
+        "periods": [1, 2, 3, 4, 5, 6, 7]
     }
 
-# ==================== USERS LIST (for login help) ====================
+# ==================== USERS LIST ====================
 
 @api_router.get("/users/list")
-async def get_users_list(current_user: dict = Depends(require_admin)):
-    """Get list of all users with their usernames (for admin reference)"""
+async def get_users_list(current_user: dict = Depends(require_admin_or_supervisor)):
     users = await db.users.find({}, {"_id": 0, "password_hash": 0}).to_list(1000)
     return users
 
@@ -1243,15 +1511,13 @@ async def get_users_list(current_user: dict = Depends(require_admin)):
 
 @api_router.post("/seed")
 async def seed_database():
-    # Check if already seeded
     admin = await db.users.find_one({"username": "admin"})
     if admin:
         return {"message": "قاعدة البيانات مُعدة مسبقاً"}
     
     # Create Admin
-    admin_id = str(uuid.uuid4())
     await db.users.insert_one({
-        "id": admin_id,
+        "id": str(uuid.uuid4()),
         "username": "admin",
         "password_hash": hash_password("admin123"),
         "full_name": "مدير المدرسة",
@@ -1259,84 +1525,60 @@ async def seed_database():
         "gender": "male"
     })
     
-    # Create sample teachers
-    teachers_data = [
-        {"full_name": "أحمد محمد علي", "gender": "male", "subject": "الرياضيات", "phone": "0991234567", "hourly_rate": 5000, "total_hours": 40, "bonus": 10000, "deductions": 0},
-        {"full_name": "فاطمة حسن", "gender": "female", "subject": "اللغة العربية", "phone": "0992345678", "hourly_rate": 4500, "total_hours": 35, "bonus": 5000, "deductions": 2000},
-        {"full_name": "محمود أحمد", "gender": "male", "subject": "الفيزياء", "phone": "0993456789", "hourly_rate": 5500, "total_hours": 30, "bonus": 8000, "deductions": 0},
-    ]
-    
-    for teacher in teachers_data:
-        teacher_id = str(uuid.uuid4())
-        user_id = str(uuid.uuid4())
-        username = generate_username("teacher", teacher["full_name"])
-        
-        await db.users.insert_one({
-            "id": user_id,
-            "username": username,
-            "password_hash": hash_password("123456"),
-            "full_name": teacher["full_name"],
-            "role": "teacher",
-            "gender": teacher["gender"]
-        })
-        
-        teacher["id"] = teacher_id
-        teacher["user_id"] = user_id
-        await db.teachers.insert_one(teacher)
-    
-    # Create sample students
-    students_data = [
-        {"full_name": "عمر خالد", "gender": "male", "birth_date": "2008-05-15", "class_name": "الصف العاشر", "section": "أ", "address": "حمص - حي الوعر", "parent_info": {"father_name": "خالد أحمد", "mother_name": "سمر محمد", "father_phone": "0994567890", "mother_phone": "0995678901"}},
-        {"full_name": "مريم أحمد", "gender": "female", "birth_date": "2008-08-20", "class_name": "الصف العاشر", "section": "أ", "address": "حمص - حي الإنشاءات", "parent_info": {"father_name": "أحمد سعيد", "mother_name": "هدى علي", "father_phone": "0996789012", "mother_phone": "0997890123"}},
-        {"full_name": "يوسف محمد", "gender": "male", "birth_date": "2007-03-10", "class_name": "الصف الحادي عشر علمي", "section": "ب", "address": "حمص - باب هود", "parent_info": {"father_name": "محمد سليم", "mother_name": "رنا خالد", "father_phone": "0998901234", "mother_phone": "0999012345"}},
-        {"full_name": "سارة علي", "gender": "female", "birth_date": "2007-11-25", "class_name": "الصف الحادي عشر أدبي", "section": "أ", "address": "حمص - حي الزهراء", "parent_info": {"father_name": "علي حسين", "mother_name": "نور أحمد", "father_phone": "0991122334", "mother_phone": "0992233445"}},
-    ]
-    
-    for student in students_data:
-        student_id = str(uuid.uuid4())
-        user_id = str(uuid.uuid4())
-        username = generate_username("student", student["full_name"])
-        
-        await db.users.insert_one({
-            "id": user_id,
-            "username": username,
-            "password_hash": hash_password("123456"),
-            "full_name": student["full_name"],
-            "role": "student",
-            "gender": student["gender"]
-        })
-        
-        student["id"] = student_id
-        student["user_id"] = user_id
-        student["registration_date"] = "2024-09-01"
-        await db.students.insert_one(student)
-        
-        # Create financial record for student
-        await db.financials.insert_one({
-            "id": str(uuid.uuid4()),
-            "student_id": student_id,
-            "student_name": student["full_name"],
-            "class_name": student["class_name"],
-            "total_fee": 500000,  # القسط الافتراضي
-            "discount": 0,
-            "payments": []
-        })
-    
-    # Create sample announcements
-    await db.announcements.insert_one({
+    # Create Supervisor
+    await db.users.insert_one({
         "id": str(uuid.uuid4()),
-        "title": "بداية الفصل الدراسي الثاني",
-        "content": "نعلم طلابنا الأعزاء وأولياء أمورهم الكرام بأن الفصل الدراسي الثاني سيبدأ بتاريخ 01/02/2025. نتمنى للجميع فصلاً دراسياً موفقاً.",
-        "target_audience": "all",
-        "is_active": True,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "created_by": "مدير المدرسة"
+        "username": "موجه",
+        "password_hash": hash_password("123456"),
+        "full_name": "الموجه التربوي",
+        "role": "supervisor",
+        "gender": "male"
     })
     
     # Create default settings
     await db.settings.insert_one(SchoolSettings().model_dump())
     
-    return {"message": "تم إعداد قاعدة البيانات بنجاح", "admin_credentials": {"username": "admin", "password": "admin123"}}
+    # Create default class fees
+    default_fees = [
+        {"class_name": "الصف السابع", "annual_fee": 400000},
+        {"class_name": "الصف الثامن", "annual_fee": 400000},
+        {"class_name": "الصف التاسع", "annual_fee": 450000},
+        {"class_name": "الصف العاشر", "annual_fee": 500000},
+        {"class_name": "الصف الحادي عشر علمي", "annual_fee": 550000},
+        {"class_name": "الصف الحادي عشر أدبي", "annual_fee": 550000},
+        {"class_name": "الصف الثالث الثانوي علمي", "annual_fee": 600000},
+        {"class_name": "الصف الثالث الثانوي أدبي", "annual_fee": 600000},
+    ]
+    for fee in default_fees:
+        await db.class_fees.insert_one(fee)
+    
+    return {
+        "message": "تم إعداد قاعدة البيانات بنجاح",
+        "credentials": {
+            "admin": {"username": "admin", "password": "admin123"},
+            "supervisor": {"username": "موجه", "password": "123456"}
+        }
+    }
+
+# ==================== CLEAR DUMMY DATA ====================
+
+@api_router.post("/clear-data")
+async def clear_dummy_data(current_user: dict = Depends(require_admin)):
+    """Clear all dummy/test data"""
+    await db.students.delete_many({})
+    await db.teachers.delete_many({})
+    await db.grades.delete_many({})
+    await db.attendance.delete_many({})
+    await db.financials.delete_many({})
+    await db.announcements.delete_many({})
+    await db.weekly_schedules.delete_many({})
+    await db.exam_schedules.delete_many({})
+    await db.teacher_attendance.delete_many({})
+    
+    # Keep admin and supervisor users
+    await db.users.delete_many({"role": {"$nin": ["admin", "supervisor"]}})
+    
+    return {"message": "تم مسح جميع البيانات التجريبية"}
 
 # ==================== ROOT ====================
 
@@ -1355,7 +1597,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
