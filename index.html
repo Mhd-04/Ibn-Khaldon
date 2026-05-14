@@ -1,74 +1,209 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>كشف علامات المواد</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .table-shadow { box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.07); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>بوابة الطالب - كشف العلامات</title>
+<style>
+:root {
+--wpu-purple: #8e82cf; /* اللون البنفسجي المحدث من الصورة /
+--wpu-bg: #f7f7f7;
+--wpu-text: #666;
+}
+body {
+font-family: 'Segoe UI', Tahoma, sans-serif;
+background-color: var(--wpu-bg);
+margin: 0;
+padding: 10px;
+}
+.card {
+background: white;
+border-radius: 4px;
+box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+max-width: 600px;
+margin: 10px auto;
+overflow: hidden;
+border-top: 3px solid var(--wpu-purple); / الخط العلوي المميز /
+}
+.top-header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 10px 15px;
+border-bottom: 1px solid #f0f0f0;
+}
+.user-section {
+display: flex;
+align-items: center;
+gap: 10px;
+font-size: 14px;
+color: #444;
+}
+.user-img {
+width: 35px;
+height: 35px;
+border-radius: 50%;
+background: #eee;
+}
+table {
+width: 100%;
+border-collapse: collapse;
+}
+/ تنسيق الرأسية مع قسم "تفاصيل" /
+th {
+color: #888;
+font-weight: normal;
+font-size: 12px;
+padding: 8px 4px;
+border-bottom: 1px solid #eee;
+vertical-align: middle;
+}
+.details-header {
+border-right: 1px solid #eee;
+}
+.sub-header {
+border-top: 1px solid #eee;
+display: flex;
+justify-content: space-around;
+padding-top: 4px;
+margin-top: 4px;
+}
+td {
+padding: 12px 6px;
+font-size: 13px;
+color: var(--wpu-text);
+border-bottom: 1px solid #f9f9f9;
+text-align: center;
+}
+.subject-name {
+text-align: right;
+width: 35%;
+color: #555;
+font-weight: 500;
+}
+.gpa-section {
+background-color: #d4edda;
+padding: 12px;
+font-size: 13px;
+color: #155724;
+margin: 15px;
+border-radius: 4px;
+line-height: 1.6;
+}
+/ تلوين الصفوف متبادلاً */
+tbody tr:nth-child(even) {
+background-color: #fafafa;
+}
+</style>
 </head>
-<body class="bg-gray-50 p-4">
+<body>
 
-    <div class="max-w-4xl mx-auto bg-white rounded-lg table-shadow overflow-hidden">
-        <table class="w-full text-right border-collapse">
-            <!-- رأس الجدول -->
-            <thead class="bg-white border-b-2 border-indigo-100">
-                <tr class="text-gray-600 text-sm">
-                    <th class="p-4 font-bold">اسم المقرر</th>
-                    <th class="p-4 font-bold">رمز المقرر</th>
-                    <th class="p-4 font-bold text-center">عدد الساعات</th>
-                    <th colspan="2" class="p-4 font-bold text-center border-r border-gray-100">
-                        تفاصيل
-                        <div class="flex justify-around mt-1 text-xs border-t pt-1">
-                            <span>1</span>
-                            <span>2</span>
-                        </div>
-                    </th>
-                </tr>
-            </thead>
-            
-            <!-- محتوى الجدول -->
-            <tbody class="divide-y divide-gray-50">
-                <!-- مادة مفاهيم الإنترنت -->
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="p-4 text-blue-900 font-medium">مفاهيم الإنترنت وبرمجة الوب</td>
-                    <td class="p-4 text-gray-500">EIT221</td>
-                    <td class="p-4 text-center">3</td>
-                    <td class="p-4 text-center font-bold text-green-600 border-r border-gray-50">30 / 30</td>
-                    <td class="p-4 text-center text-gray-400">-</td>
-                </tr>
+<div class="card">
+<div class="top-header">
+<div class="user-section">
+<img src="https://via.placeholder.com/35" class="user-img" alt="user">
+<span>202311362</span>
+</div>
+<div style="color: #999;">☰</div>
+</div>
 
-                <!-- مادة اللغة الإنكليزية -->
-                <tr class="bg-gray-50/30 hover:bg-gray-50 transition-colors">
-                    <td class="p-4 text-blue-900 font-medium">لغة إنكليزية 4</td>
-                    <td class="p-4 text-gray-500">EBS201</td>
-                    <td class="p-4 text-center">3</td>
-                    <td class="p-4 text-center font-bold text-green-600 border-r border-gray-50">30 / 30</td>
-                    <td class="p-4 text-center text-gray-400">-</td>
-                </tr>
+<table>
+<thead>
+<tr>
+<th class="subject-name">اسم المقرر</th>
+<th>رمز المقرر</th>
+<th>عدد الساعات</th>
+<th class="details-header">
+تفاصيل
+<div class="sub-header">
+<span>1</span>
+<span>2</span>
+</div>
+</th>
+<th>السعي الفصلي</th>
+<th>الامتحان</th>
+<th>الدرجة المستحقة</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="subject-name">أدوات التصميم بمعونة الحاسوب</td>
+<td>EIT801</td>
+<td>2</td>
+<td class="border-r border-gray-100">
+<div class="flex justify-around">
+<span style="color:#28a745; font-weight:bold;"></span>
+<span style="color:#ccc">-</span>
+</div>
+</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td class="subject-name">بحوث العمليات البرمجية</td>
+<td>ECT514</td>
+<td>3</td>
+<td class="border-r border-gray-100">
+<div class="flex justify-around">
+<span></span>
+<span style="color:#ccc">-</span>
+</div>
+</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td class="subject-name">مفاهيم الانترنت وبرمجة الوب</td>
+<td>EIT332</td>
+<td>3</td>
+<td class="border-r border-gray-100">
+<div class="flex justify-around">
+<span style="color:#28a745; font-weight:bold;">29 من30</span>
+<span style="color:#ccc">-</span>
+</div>
+</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td class="subject-name">أساسيات الشبكات الحاسوبية (2)</td>
+<td>EIT413</td>
+<td>3</td>
+<td class="border-r border-gray-100">
+<div class="flex justify-around">
+<span style="color:#28a745; font-weight:bold;"></span>
+<span style="color:#ccc">-</span>
+</div>
+</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td class="subject-name">لغة انكليزية (4)</td>
+<td>EIT310</td>
+<td>3</td>
+<td class="border-r border-gray-100">
+<div class="flex justify-around">
+<span style="color:#28a745; font-weight:bold;">30 من 30</span>
+<span style="color:#ccc">-</span>
+</div>
+</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
 
-                <!-- بقية المواد كما في الصورة -->
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="p-4 text-blue-900 font-medium">بحوث العمليات</td>
-                    <td class="p-4 text-gray-500">EBS300</td>
-                    <td class="p-4 text-center">3</td>
-                    <td class="p-4 text-center text-gray-400 border-r border-gray-50">-</td>
-                    <td class="p-4 text-center text-gray-400">-</td>
-                </tr>
-
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="p-4 text-blue-900 font-medium">أساسيات الشبكات الحاسوبية 2</td>
-                    <td class="p-4 text-gray-500">EIT321</td>
-                    <td class="p-4 text-center">3</td>
-                    <td class="p-4 text-center text-gray-400 border-r border-gray-50">-</td>
-                    <td class="p-4 text-center text-gray-400">-</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+<div class="gpa-section">
+<strong>المعدل الفصلي:</strong> 76 ( 2.96 )<br>
+<small>الحالة: ناجح - لا يوجد إنذار أكاديمي</small>
+</div>
+</div>
 
 </body>
 </html>
