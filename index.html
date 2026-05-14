@@ -1,208 +1,243 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>بوابة الطالب - كشف العلامات</title>
-<style>
-:root {
---wpu-purple: #8e82cf; /* اللون البنفسجي المحدث من الصورة /
---wpu-bg: #f7f7f7;
---wpu-text: #666;
-}
-body {
-font-family: 'Segoe UI', Tahoma, sans-serif;
-background-color: var(--wpu-bg);
-margin: 0;
-padding: 10px;
-}
-.card {
-background: white;
-border-radius: 4px;
-box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-max-width: 600px;
-margin: 10px auto;
-overflow: hidden;
-border-top: 3px solid var(--wpu-purple); / الخط العلوي المميز /
-}
-.top-header {
-display: flex;
-align-items: center;
-justify-content: space-between;
-padding: 10px 15px;
-border-bottom: 1px solid #f0f0f0;
-}
-.user-section {
-display: flex;
-align-items: center;
-gap: 10px;
-font-size: 14px;
-color: #444;
-}
-.user-img {
-width: 35px;
-height: 35px;
-border-radius: 50%;
-background: #eee;
-}
-table {
-width: 100%;
-border-collapse: collapse;
-}
-/ تنسيق الرأسية مع قسم "تفاصيل" /
-th {
-color: #888;
-font-weight: normal;
-font-size: 12px;
-padding: 8px 4px;
-border-bottom: 1px solid #eee;
-vertical-align: middle;
-}
-.details-header {
-border-right: 1px solid #eee;
-}
-.sub-header {
-border-top: 1px solid #eee;
-display: flex;
-justify-content: space-around;
-padding-top: 4px;
-margin-top: 4px;
-}
-td {
-padding: 12px 6px;
-font-size: 13px;
-color: var(--wpu-text);
-border-bottom: 1px solid #f9f9f9;
-text-align: center;
-}
-.subject-name {
-text-align: right;
-width: 35%;
-color: #555;
-font-weight: 500;
-}
-.gpa-section {
-background-color: #d4edda;
-padding: 12px;
-font-size: 13px;
-color: #155724;
-margin: 15px;
-border-radius: 4px;
-line-height: 1.6;
-}
-/ تلوين الصفوف متبادلاً */
-tbody tr:nth-child(even) {
-background-color: #fafafa;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة الطالب - جامعة الوادي</title>
+    <style>
+        /* استخدام خطوط النظام التي تشبه خط الموقع الأصلي */
+        body {
+            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+            background-color: #fcfcfc;
+            margin: 0;
+            padding: 10px;
+            color: #444;
+        }
+
+        .main-container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        /* الجزء العلوي - الهيدر */
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 1px solid #eee;
+            background-color: #f9f9f9;
+        }
+
+        /* تنسيق الجدول ليتطابق مع الصورة 1778770211843.jpeg */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        thead {
+            border-bottom: 2px solid #8e82cf; /* الخط البنفسجي المميز */
+        }
+
+        th {
+            font-weight: normal;
+            font-size: 13px;
+            color: #888;
+            padding: 15px 5px;
+            text-align: center;
+        }
+
+        .col-name { width: 35%; text-align: right; padding-right: 15px; }
+
+        /* تنسيق قسم التفاصيل 1 و 2 */
+        .details-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .details-sub {
+            display: flex;
+            width: 100%;
+            justify-content: space-around;
+            margin-top: 5px;
+            font-size: 11px;
+            border-top: 1px solid #eee;
+            padding-top: 3px;
+        }
+
+        td {
+            padding: 20px 5px;
+            font-size: 14px;
+            border-bottom: 1px solid #f5f5f5;
+            text-align: center;
+            vertical-align: middle;
+            color: #555;
+            line-height: 1.4;
+        }
+
+        .subject-title {
+            text-align: right;
+            padding-right: 15px;
+            color: #666;
+        }
+
+        /* تنسيق العلامات الأخضر */
+        .grade-green {
+            color: #2fb344;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .empty-dash {
+            color: #ccc;
+        }
+
+        /* تلوين الصفوف المتبادل */
+        tbody tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        /* قسم المعدل الفصلي */
+        .footer-stats {
+            padding: 20px;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #333;
+        }
+
+        .gpa-line {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .status-badge {
+            color: #666;
+            font-size: 13px;
+        }
+
+    </style>
 </head>
 <body>
 
-<div class="card">
-<div class="top-header">
-<div class="user-section">
-<img src="https://via.placeholder.com/35" class="user-img" alt="user">
-<span>202311362</span>
-</div>
-<div style="color: #999;">☰</div>
-</div>
+<div class="main-container">
+    <!-- الهيدر -->
+    <div class="header-top">
+        <div class="user-info">
+            <div class="user-avatar"></div>
+            <span>202311362</span>
+        </div>
+        <div style="font-size: 24px; color: #ccc;">☰</div>
+    </div>
 
-<table>
-<thead>
-<tr>
-<th class="subject-name">اسم المقرر</th>
-<th>رمز المقرر</th>
-<th>عدد الساعات</th>
-<th class="details-header">
-تفاصيل
-<div class="sub-header">
-<span>1</span>
-<span>2</span>
-</div>
-</th>
-<th>السعي الفصلي</th>
-<th>الامتحان</th>
-<th>الدرجة المستحقة</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="subject-name">أدوات التصميم بمعونة الحاسوب</td>
-<td>EIT801</td>
-<td>2</td>
-<td class="border-r border-gray-100">
-<div class="flex justify-around">
-<span style="color:#28a745; font-weight:bold;"></span>
-<span style="color:#ccc">-</span>
-</div>
-</td>
-<td>-</td>
-<td>-</td>
-<td>-</td>
-</tr>
-<tr>
-<td class="subject-name">بحوث العمليات البرمجية</td>
-<td>ECT514</td>
-<td>3</td>
-<td class="border-r border-gray-100">
-<div class="flex justify-around">
-<span></span>
-<span style="color:#ccc">-</span>
-</div>
-</td>
-<td>-</td>
-<td>-</td>
-<td>-</td>
-</tr>
-<tr>
-<td class="subject-name">مفاهيم الانترنت وبرمجة الوب</td>
-<td>EIT332</td>
-<td>3</td>
-<td class="border-r border-gray-100">
-<div class="flex justify-around">
-<span style="color:#28a745; font-weight:bold;">29 من30</span>
-<span style="color:#ccc">-</span>
-</div>
-</td>
-<td>-</td>
-<td>-</td>
-<td>-</td>
-</tr>
-<tr>
-<td class="subject-name">أساسيات الشبكات الحاسوبية (2)</td>
-<td>EIT413</td>
-<td>3</td>
-<td class="border-r border-gray-100">
-<div class="flex justify-around">
-<span style="color:#28a745; font-weight:bold;"></span>
-<span style="color:#ccc">-</span>
-</div>
-</td>
-<td>-</td>
-<td>-</td>
-<td>-</td>
-</tr>
-<tr>
-<td class="subject-name">لغة انكليزية (4)</td>
-<td>EIT310</td>
-<td>3</td>
-<td class="border-r border-gray-100">
-<div class="flex justify-around">
-<span style="color:#28a745; font-weight:bold;">30 من 30</span>
-<span style="color:#ccc">-</span>
-</div>
-</td>
-<td>-</td>
-<td>-</td>
-<td>-</td>
-</tr>
-</tbody>
-</table>
+    <!-- الجدول -->
+    <table>
+        <thead>
+            <tr>
+                <th class="col-name">اسم المقرر</th>
+                <th>رمز المقرر</th>
+                <th>عدد الساعات</th>
+                <th>
+                    <div class="details-box">
+                        <span>تفاصيل</span>
+                        <div class="details-sub">
+                            <span>1</span>
+                            <span>2</span>
+                        </div>
+                    </div>
+                </th>
+                <th>السعي الفصلي</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="subject-title">أدوات التصميم بمعونة الحاسوب</td>
+                <td>EIT801</td>
+                <td>2</td>
+                <td>
+                    <div style="display: flex; justify-content: space-around;">
+                        <span class="grade-green">30 من 30</span>
+                        <span class="empty-dash">-</span>
+                    </div>
+                </td>
+                <td class="empty-dash">-</td>
+            </tr>
+            <tr>
+                <td class="subject-title">بحوث العمليات البرمجية</td>
+                <td>ECT514</td>
+                <td>3</td>
+                <td>
+                    <div style="display: flex; justify-content: space-around;">
+                        <span>19 من 30</span>
+                        <span class="empty-dash">-</span>
+                    </div>
+                </td>
+                <td class="empty-dash">-</td>
+            </tr>
+            <tr>
+                <td class="subject-title">مفاهيم الانترنت وبرمجة الوب</td>
+                <td>EIT332</td>
+                <td>3</td>
+                <td>
+                    <div style="display: flex; justify-content: space-around;">
+                        <span class="grade-green">29 من 30</span>
+                        <span class="empty-dash">-</span>
+                    </div>
+                </td>
+                <td class="empty-dash">-</td>
+            </tr>
+            <tr>
+                <td class="subject-title">أساسيات الشبكات الحاسوبية (2)</td>
+                <td>EIT413</td>
+                <td>3</td>
+                <td>
+                    <div style="display: flex; justify-content: space-around;">
+                        <span class="grade-green">30 من 30</span>
+                        <span class="empty-dash">-</span>
+                    </div>
+                </td>
+                <td class="empty-dash">-</td>
+            </tr>
+            <tr>
+                <td class="subject-title">لغة انكليزية (4)</td>
+                <td>EIT310</td>
+                <td>3</td>
+                <td>
+                    <div style="display: flex; justify-content: space-around;">
+                        <span class="grade-green">30 من 30</span>
+                        <span class="empty-dash">-</span>
+                    </div>
+                </td>
+                <td class="empty-dash">-</td>
+            </tr>
+        </tbody>
+    </table>
 
-<div class="gpa-section">
-<strong>المعدل الفصلي:</strong> 76 ( 2.96 )<br>
-<small>الحالة: ناجح - لا يوجد إنذار أكاديمي</small>
-</div>
+    <!-- المعدل -->
+    <div class="footer-stats">
+        <div class="gpa-line">المعدل الفصلي: 76 ( 2.96 )</div>
+        <div class="status-badge">الحالة: ناجح - لا يوجد إنذار أكاديمي</div>
+    </div>
 </div>
 
 </body>
